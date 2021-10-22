@@ -2,10 +2,10 @@
 #define EVOLUCAO_DIFERENCIAL_H_
 
 #include "../Base/dependencias.h"
-/*
-#define F 0.5
+
+#define F 0.1
 #define CR 0.9
-#define NP 250*/
+/* #define NP 250 */
 #define NUM_MAX_GERACOES 50000
 #define PENALIDADE 100
 #define IMPRESSAO_ARQUIVO 0

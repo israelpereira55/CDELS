@@ -546,8 +546,8 @@ int main(int argc, char *argv[]) {
 */
 
 int main() {
-	F = 0.1;
-	CR = 0.9;
+	//F = 0.1;
+	//CR = 0.9;
 	int semente = time(NULL);
 	
 	printf("ED Combinatória!\n\n");
