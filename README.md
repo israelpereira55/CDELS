@@ -74,9 +74,9 @@ You can also make your own instance, but it needs to follow TSPLIB standards.
 You need to clean the header of the instance before using it on CDELS.
 The first line should have 4 integers. The number of vehicles, optimum value of the instance, number of clients
 and vehicle capacity. If you don't know the instancy optimum value, then just put a low value which should be
-bellow the lower bound (just write a small integer! ;) ).
+bellow the lower bound (just write a small integer! ;) ). Then put the instance on the same path of the executable and you can run it.
 
-**Important:** We are using the TSPLIB95 standard which rounds any operation which uses floating numbers. If you don't want that, remove the +0.5 increase.
+**Important:** We are using the TSPLIB95 standard which rounds any operation that use floating numbers. If you don't want that, remove the +0.5 increase.
 
 
 ### Prerequisites
