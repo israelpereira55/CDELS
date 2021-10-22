@@ -10,7 +10,7 @@
 
 #include "../HeadED/EvolucaoDiferencial.h"
 
-double F, CR;
+//double F, CR;
 int NP;
 
 Geracao* geracao_inicializa() {
