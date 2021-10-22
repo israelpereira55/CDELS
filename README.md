@@ -12,7 +12,7 @@
   <p align="center">
     This is  an algorithm that seeks to get the optimum solutions for the CVRP. 
     <br />
-    The coded heuristics are explained on the published article [refence here]. If you use this code, please cite us on your article! =)
+    The coded heuristics are explained on the published article [refence here]. If you use this code, please cite us in your article! =)
     <br />
   </p>
 </p>
@@ -45,9 +45,9 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-The Capacitated Vehicle Routing Problem (CVRP) is a known combinatorial problem for it's difficult NP-hard. We love the Differential Evolution metaheuristic, so we proposed an combinatorial adaptation so we can use DE on combinatorious problems, as well on CVRP! =)
+The Capacitated Vehicle Routing Problem (CVRP) is a known combinatorial problem for it's difficult NP-hard. We love the Differential Evolution metaheuristic, so we proposed an combinatorial adaptation so we can use DE on combinatorial problems, as well on CVRP! =)
 
-On literature there are other adaptations to use DE on combinatorious problems. Teoh et al. [2] have done a great article using DE for CVRP, which uses a easy to code adaptation for DE, which ranks the real numbers and assign integers considering the ranks of the numbers, where lower number are assigned to lower integers. It's not only easy to code, but also gives good results, but we have proposed an adaptation that use the position of the clients instead which gave us better results. The method is explained detailed on our article [1].
+On literature there are other adaptations to use DE on combinatorial problems. Teoh et al. [2] have done a great article using DE for CVRP, which uses a easy to code adaptation for DE, which ranks the real numbers and assign integers considering the ranks of the numbers, where lower number are assigned to lower integers. It's not only easy to code, but also gives good results, but we have proposed an adaptation that use the position of the clients instead which gave us better results. The method is explained detailed on our article [1].
 
 I'm publishing the code to make it easier to reproduce. Sadly on optimization researches it's not a common practice, but let's change that? ;)
 
@@ -71,16 +71,28 @@ You can also make your own instance, but it needs to follow TSPLIB standards.
 * [CVRPLIB](http://vrp.atd-lab.inf.puc-rio.br/)
 
 
+You need to clean the header of the instance before using it on CDELS.
+The first line should have 4 integers. The number of vehicles, optimum value of the instance, number of clients
+and vehicle capacity. If you don't know the instancy optimum value, then just put a low value which should be
+bellow the lower bound (just write a small integer! ;) ).
+
+**Important:** We are using the TSPLIB95 standard which rounds any operation which uses floating numbers. If you don't want that, remove the +0.5 increase.
+
+
 ### Prerequisites
 
 gcc and make.
 
 
-### Installation
+### Setup
 
 1. Change the parameters
-   WIP!
-   
+    [EvolucaoDiferencial.h](https://github.com/israelpereira55/CDELS/blob/main/HeadED/EvolucaoDiferencial.h)
+    To change F, CR, Penality and MaxGen.
+
+    [EvolucaoDiferencial.c](https://github.com/israelpereira55/CDELS/tree/main/Combinatoria)
+    To change NP. You can use it statically with the header if you want, but on this case you need to remove the NP definition on the main file.
+
 2. Run the project
    ```sh
    make
@@ -89,11 +101,11 @@ gcc and make.
 
 
 
-<!-- USAGE EXAMPLES -->
+<!-- USAGE EXAMPLES 
 ### Parameters description
 
 WIP!
-
+-->
 
 <!-- CONTACT -->
 ## Contact
@@ -107,9 +119,10 @@ Project Link: [https://github.com/israelpereira55/CDELS](https://github.com/isra
 
 
 
-<!-- ACKNOWLEDGEMENTS -->
-## Acknowledgements
+<!-- ACKNOWLEDGEMENTS 
+## Thanks to
 * [Best README Template](https://github.com/israelpereira55/MDVRPTW)
+-->
 
 
 ## References
@@ -117,6 +130,8 @@ Project Link: [https://github.com/israelpereira55/CDELS](https://github.com/isra
 [1] Our article reference
 
 [2] Teoh et al reference
+
+[3] DE
 
 
 
