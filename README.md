@@ -119,10 +119,14 @@ Project Link: [https://github.com/israelpereira55/CDELS](https://github.com/isra
 
 
 
-<!-- ACKNOWLEDGEMENTS 
+<!-- ACKNOWLEDGEMENTS  -->
 ## Thanks to
-* [Best README Template](https://github.com/israelpereira55/MDVRPTW)
--->
+* Storn and Price for Differential Evolution
+
+* [math.uwaterloo](https://www.math.uwaterloo.ca/tsp/index.html) for the amazing mona lisa picture and the challenge. One day I should try it! ;D
+
+* [Best README Template](https://github.com/othneildrew/Best-README-Template)
+
 
 
 ## References
