@@ -88,9 +88,12 @@ gcc and make.
 
 1. Change the parameters
     * [EvolucaoDiferencial.h](https://github.com/israelpereira55/CDELS/blob/main/HeadED/EvolucaoDiferencial.h)
+
       To change F, CR, Penality and MaxGen.
 
+
     * [EvolucaoDiferencial.c](https://github.com/israelpereira55/CDELS/tree/main/Combinatoria)
+
       To change NP. You can use it statically with the header if you want, but on this case you need to remove the NP definition on the main file.
 
 2. Run the project
