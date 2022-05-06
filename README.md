@@ -122,7 +122,7 @@ Project Link: [https://github.com/israelpereira55/CDELS](https://github.com/isra
 
 
 <!-- ACKNOWLEDGEMENTS  -->
-## Acknowledments
+## Acknowledgments
 * Rainer Storn and Kenneth Price for Differential Evolution metaheuristic.
 
 * [Best README Template](https://github.com/othneildrew/Best-README-Template)
