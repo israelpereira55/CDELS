@@ -12,7 +12,7 @@
   <p align="center">
     This is  an algorithm that seeks to get the optimum solutions for the CVRP. 
     <br />
-    The coded heuristics are explained on the published article [refence here]. If you use this code, please cite us in your article! =)
+    The coded heuristics are explained on the published article [refence here]. If you use this code, please cite us in your article or work! =)
     <br />
   </p>
 </p>
@@ -122,10 +122,8 @@ Project Link: [https://github.com/israelpereira55/CDELS](https://github.com/isra
 
 
 <!-- ACKNOWLEDGEMENTS  -->
-## Thanks to
-* Storn and Price for Differential Evolution
-
-* [math.uwaterloo](https://www.math.uwaterloo.ca/tsp/index.html) for the amazing mona lisa picture and the challenge. One day I should try it! =D
+## Acknowledments
+* Rainer Storn and Kenneth Price for Differential Evolution metaheuristic.
 
 * [Best README Template](https://github.com/othneildrew/Best-README-Template)
 
