@@ -114,7 +114,7 @@ WIP!
 <!-- ACKNOWLEDGEMENTS  -->
 ## Known bugs
 
-Using very large instances (250+ customers) we noticed that the final solution cost using the distance matrix was presenting a slightly different value (1-2 units of difference) than calculating the cost directly, probably due to the use of TSPLIB95 rounding standards and distance matrix. Until we find a way to deal with this scenario, we suggest disabling the distance matrix and always verifying the final solution cost or disabling TSPLIB95 rounding standards if possible. To verify the solution you can use [CVRPPLOT](https://github.com/israelpereira55/CVRPPLOT).
+Using very large instances (250+ customers) we noticed in rare cases that the final solution cost using the distance matrix was presenting a slightly different value (1-2 units of difference) than calculating the cost directly, probably due to the use of TSPLIB95 rounding standards and distance matrix. Until we find a way to deal with this scenario, we suggest disabling the distance matrix and always verifying the final solution cost or disabling TSPLIB95 rounding standards if possible. To verify the solution you can use [CVRPPLOT](https://github.com/israelpereira55/CVRPPLOT).
 
 All solutions presented in the article were validated to ensure that they were feasible and had the exact solution cost as reported.
 
