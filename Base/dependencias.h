@@ -1,60 +1,59 @@
-#ifndef DEPENDENCIAS_H_
-#define DEPENDENCIAS_H_
+#ifndef DEPENDENCIES_H_
+#define DEPENDENCIES_H_
 
-typedef struct cidade Cidade;
+typedef struct customer Customer;
 
-struct cidade {
-	int id, //Identificação: número da cidade.
-	    demanda;
-	double x,y; //Posição da cidade no espaço.
+struct customer {
+	int id, // Customer number
+	    demand; 
+	double x,y; // Customer 2D position
 };
 
-typedef struct individuo Individuo;
 
-struct individuo {
-	int **rotas,
-	    **posicoes, // Dado um indice i no vetor posicao, o conteúdo é a posicao da cidade i no vetor percurso. Ou seja, ele indica a posicao das cidades no vetor percurso.
+typedef struct individual Individual;
+
+struct individual {
+	int **routes,
+	    **positions, // Dado um indice i no vetor posicao, o conteúdo é a posicao da customer i no vetor percurso. Ou seja, ele indica a posicao das customers no vetor percurso.
 	     *fim_rotas,
-	     *cargas_disponiveis;
-	int custo,
-	    viavel,
-	    clonado;
+	     *free_loads;
+	int cost,
+	    feasible,
+	    cloned;
 };
 
 
-Cidade* cidade_cria(int id, double x, double y);
+Customer* customer_create(int id, double x, double y);
 
-//int cidade_calcula_distancia(Cidade* c1, Cidade* c2);
+Customer* customer_free(Customer* customer);
 
-Cidade* cidade_libera(Cidade* cidade);
+int** distances_matrix_init(Customer* customers, int num_customers);
 
-int** matriz_custos_inicializa(Cidade* cidades, int num_cidades);
+int** distances_matrix_free(int** distances, int num_customers);
 
-int** matriz_custos_libera(int** distancias, int num_cidades);
-
-
-Individuo* individuo_inicializa(int num_cidades, int num_veiculos);
-
-Individuo* individuo_gera_mais_esquerda(int** distancias, Cidade* cidades, int num_cidades, int capacidade_max, int num_rotas);
-
-Individuo* individuo_gera_mais_direita(int** distancias, Cidade* cidades, int num_cidades, int capacidade_max, int num_rotas);
-
-void individuo_troca_cidades(Individuo* individuo, int cidade1, int carga1, int cidade2, int carga2);
-
-void individuo_reinsere_cidade_rota(Individuo* individuo, int cidade, int novo_index);
-
-void individuo_insere_cidade(Individuo* individuo, int cidade, int carga, int nova_posicao, int nova_rota);
-
-/* Sem uso */
-// void individuo_insere_cidade_fim_rota(Individuo* individuo, int cidade, int carga, int rota);
-
-void individuo_remove_cidade(Individuo* individuo, int cidade, int carga);
-
-void individuo_atualiza_atributos(Individuo* individuo, int capacidade_max, int num_veiculos, int** distancias, Cidade* cidades);
-
-Individuo* individuo_clona(Individuo* individuo, int num_cidades, int num_veiculos);
-
-Individuo* individuo_libera(Individuo* individuo, int num_veiculos);
+//int calculate_distance(Customer* c1, Customer* c2);
 
 
-#endif /*DEPENDENCIAS_H_*/
+Individual* individual_init(int num_customers, int num_vehicles);
+
+Individual* individual_generate_top_to_down(int** distances, Customer* customers, int num_customers, int max_capacity, int num_vehicles);
+
+Individual* individual_gererate_down_to_top(int** distances, Customer* customers, int num_customers, int max_capacity, int num_vehicles);
+
+void individual_swap_customers(Individual* individual, int customer1, int load1, int customer2, int load2);
+
+void individual_reinsert_customer_in_route(Individual* individual, int customer, int new_index);
+
+void individual_insert_customer(Individual* individual, int customer, int load, int nova_posicao, int new_route);
+
+
+void individual_remove_customer(Individual* individual, int customer, int load);
+
+void individual_update_attributes(Individual* individual, int max_capacity, int num_vehicles, int** distances, Customer* customers);
+
+Individual* individual_clone(Individual* individual, int num_customers, int num_vehicles);
+
+Individual* individual_free(Individual* individual, int num_vehicles);
+
+
+#endif /*DEPENDENCIES_H_*/
