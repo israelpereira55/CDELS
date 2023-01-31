@@ -12,7 +12,7 @@
   <p align="center">
     This is  an algorithm that seeks to get the optimum solutions for the CVRP. 
     <br />
-    The coded heuristics are explained on the published article [future refence here]. If you use this code, please cite us in your article or work! =)
+    The coded heuristics are explained on the published article [1]. If you use this code, please cite us in your article or work! =)
     <br />
   </p>
 </p>
@@ -50,7 +50,7 @@ This project started when I chose the Differential Evolution in a metaheuristics
 
 I love the Differential Evolution metaheuristic. So, we have proposed a combinatorial adaptation for DE for CVRP, that can also be applied to other combinatorial problems.
 
-In the literature, there are several DE adaptations for combinatorial problems. Teoh et al. [2] have done a great article using DE for CVRP, which uses an easy-to-code adaptation for DE proposed by (Mingyong,  L.  and  Erbao,  C), which ranks the real numbers and assigns integers considering the ranks of the numbers, where a lower number are assigned to lower integers. It's not only easy to code but also gives good results. We have proposed an algorithm based in DE with an adaptation for mutation and crossover DE mechanisms. This adaptation uses the position of the clients in chromosomes which presented a better result than arithmetically updating their values. The complete algorithm is explained detailed in our article [future reference here].
+In the literature, there are several DE adaptations for combinatorial problems. Teoh et al. [2] have done a great article using DE for CVRP, which uses an easy-to-code adaptation for DE proposed by (Mingyong,  L.  and  Erbao,  C), which ranks the real numbers and assigns integers considering the ranks of the numbers, where a lower number are assigned to lower integers. It's not only easy to code but also gives good results. We have proposed an algorithm based in DE with an adaptation for mutation and crossover DE mechanisms. This adaptation uses the position of the clients in chromosomes which presented a better result than arithmetically updating their values. The complete algorithm is explained detailed in our article [1].
 
 I'm publishing the code to make it easier to reproduce. Sadly,  it's not a common practice for papers in the optimization area, but we can change that! ;)
 
@@ -142,7 +142,7 @@ Project Link: [https://github.com/israelpereira55/CDELS](https://github.com/isra
 
 ## References
 
-[1] future article reference
+[1] Souza, Israel Pereira, Maria Claudia Silva Boeres, and Renato Elias Nunes Moraes. "A robust algorithm based on Differential Evolution with local search for the Capacitated Vehicle Routing Problem." Swarm and Evolutionary Computation (2023): 101245.
 
 [2] Teoh, Boon Ean, Sivalinga Govinda Ponnambalam, and Ganesan Kanagaraj. "Differential evolution algorithm with local search for capacitated vehicle routing problem." International Journal of Bio-Inspired Computation 7.5 (2015): 321-342.
 
