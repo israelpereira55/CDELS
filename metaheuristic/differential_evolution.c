@@ -4,11 +4,11 @@
 #include <limits.h>
 #include <time.h>
 
-#include "../Base/BuscaLocal.h"
-#include "../Base/dependencias.h"
-#include "../Base/arquivo.h"
+#include "../base/local_search.h"
+#include "../base/dependences.h"
+#include "../base/arquivo.h"
 
-#include "../HeadED/EvolucaoDiferencial.h"
+#include "../metaheuristic/differential_evolution.h"
 
 //double F, CR;
 //int NP;

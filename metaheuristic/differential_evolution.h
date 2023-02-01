@@ -1,7 +1,7 @@
 #ifndef DIFFERENTIAL_EVOLUTION_H
 #define DIFFERENTIAL_EVOLUTION_H
 
-#include "../base/dependencies.h"
+#include "../base/dependences.h"
 
 #define F 0.1
 #define CR 0.9
@@ -48,8 +48,6 @@ Individual* crossover(Individual* x1, Individual* mutant, int crossover_bin, int
 Individual* generate_new_mutant(Individual* x1, Individual* x2, Individual* x3, int vehicles_num, int customers_num);
 
 //generate new mutant continuous
-
-//
 
 
 #endif /*DIFFERENTIAL_EVOLUTION_H*/
