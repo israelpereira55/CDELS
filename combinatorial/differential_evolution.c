@@ -16,7 +16,7 @@
 Generation* generation_init() {
 	static int id = 1;
 
-	Generation* generation = (Generation*) malloc (sizeof(Generation));
+	Generation *generation = (Generation*) malloc (sizeof(Generation));
 	generation->individuals = (Individual**) malloc (NP * sizeof(Individual*));
 
 /*	int i = 0;
@@ -33,15 +33,18 @@ Generation* generation_init() {
 	return generation;
 }
 
-Generation* initial_population(int** distances, Customer* customers, int num_customers, int num_vehicles, int max_capacity) {	
-	Generation* generation = generation_init();
-	Individual* individual;
+Generation* initial_population(int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max) {	
+	Generation *generation = generation_init();
+	Individual *individual;
 	
+	//TODO: remove and include in loop
 	int select = rand() % 2;
 	if(select == 1) {
-		individual = individual_generate_top_to_down(distances, customers, num_customers, max_capacity, num_vehicles);
-	} else individual = individual_generate_down_to_top(distances, customers, num_customers, max_capacity, num_vehicles);
-	
+		individual = individual_generate_top_to_down(distances, customers, customers_num, capacity_max, vehicles_num);
+	} else {
+		individual = individual_generate_down_to_top(distances, customers, customers_num, capacity_max, vehicles_num);
+	}
+
 	generation->individuals[0] = individual;
 	generation->best_solution = individual;
 	
@@ -52,9 +55,11 @@ Generation* initial_population(int** distances, Customer* customers, int num_cus
 	while(i < NP) {
 		select = rand() % 2;
 		if(select == 1) {
-			individual = individual_generate_top_to_down(distances, customers, num_customers, max_capacity, num_vehicles);
-		} else  individual = individual_generate_down_to_top(distances, customers, num_customers, max_capacity, num_vehicles);
-		
+			individual = individual_generate_top_to_down(distances, customers, customers_num, capacity_max, vehicles_num);
+		} else {
+			individual = individual_generate_down_to_top(distances, customers, customers_num, capacity_max, vehicles_num);
+		}
+
 		generation->individuals[i] = individual;
 
 		if(individual->feasible) {
@@ -71,15 +76,16 @@ Generation* initial_population(int** distances, Customer* customers, int num_cus
 void generation_zera_clones(Generation* generation){
 	int i;
 	for(i = 0; i < NP; i++){
-		if(generation->individuals[i]->cloned)
+		if(generation->individuals[i]->cloned){
 			generation->individuals[i]->cloned = 0;
+		}
 	}
 }
 
-Generation* new_generation(Generation* generation, int** distances, Customer* customers, int num_customers, int num_vehicles, int max_capacity, int mutation_rand, int crossover_bin){
-	Individual *mutant = NULL,
-		  *trial = NULL,
-		  *target = NULL;
+Generation* new_generation(Generation* generation, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max, int mutation_rand, int crossover_bin) {
+	Individual	*mutant = NULL,
+				*trial = NULL,
+				*target = NULL;
 	
 	Generation* generation2 = generation_init();
 	generation2->best_solution = generation->best_solution;
@@ -91,14 +97,14 @@ Generation* new_generation(Generation* generation, int** distances, Customer* cu
 	
 	int target_index = 0;
 	while(target_index < NP) {
-		mutante = mutation(generation, target_index, customers, num_customers, num_vehicles, mutation_rand);
+		mutante = mutation(generation, target_index, customers, customers_num, vehicles_num, mutation_rand);
 		target = generation->individuals[target_index];
-		trial = crossover(target, mutant, crossover_bin, num_customers, num_vehicles);
+		trial = crossover(target, mutant, crossover_bin, customers_num, vehicles_num);
 		
-		mutante = individual_free(mutante, num_vehicles);
-		individual_update_attributes(trial, max_capacity, num_vehicles, distances, customers);
+		mutante = individual_free(mutante, vehicles_num);
+		individual_update_attributes(trial, capacity_max, vehicles_num, distances, customers);
 
-		LocalSearch(trial, distances, customers, num_customers, num_vehicles, max_capacity);
+		LocalSearch(trial, distances, customers, customers_num, vehicles_num, capacity_max);
 		
 		if(trial->cost < target->cost){
 			if(trial->feasible){
@@ -121,14 +127,14 @@ Generation* new_generation(Generation* generation, int** distances, Customer* cu
 				target->cloned = 1;
 				generation2->num_feasible_solutions++;
 				generation2_has_best_solution_generation1 = 1;
-				trial = individual_free(trial, num_vehicles);
+				trial = individual_free(trial, vehicles_num);
 				
 			} else generation2->individuals[target_index] = trial;
 
 		} else {
 			generation2->individuals[target_index] = target;
 			target->cloned = 1;
-			trial = individual_libera(trial, num_vehicles);
+			trial = individual_libera(trial, vehicles_num);
 			
 			if(target->feasible){
 				generation2->num_feasible_solutions++;
@@ -146,12 +152,12 @@ Generation* new_generation(Generation* generation, int** distances, Customer* cu
 	return generation2;
 }
 
-Generation* generation_free(Generation* generation, int num_vehicles) {
+Generation* generation_free(Generation* generation, int vehicles_num) {
 	int i;
-	
+
 	for(i = 0; i < NP; i++) {
 		if(!generation->individuals[i]->cloned)
-			generation->individuals[i] = individual_free(generation->individuals[i], num_vehicles);
+			generation->individuals[i] = individual_free(generation->individuals[i], vehicles_num);
 	}
 	
 	free(generation->individuals);
@@ -159,23 +165,24 @@ Generation* generation_free(Generation* generation, int num_vehicles) {
 	return NULL;
 }
 
-Individual* individual_generate_mutant(Individual* x1, Individual* x2, Individual* x3, int num_vehicles, int num_customers) {
+Individual* generate_new_mutant(Individual* x1, Individual* x2, Individual* x3, int vehicles_num, int customers_num) {
 	int rota_alvo = 0,
 	    index_alvo = 0,
 	    cidade_alvo = 0,
 	    rota_mutante = 0,
 	    index_mutante = 0,
 	    cidade_escolhida = 0,
-	    cidades_possiveis[num_customers];
+	    cidades_possiveis[customers_num];
 	    
-	int num_cidades_possiveis = num_customers -1,
+	int num_cidades_possiveis = customers_num -1,
 	    index_cidade_selecionada = 0;
 	    
 	int index;
-	for(index = 0; index < num_customers; index++)
+	for(index = 0; index < customers_num; index++){
 		cidades_possiveis[index] = index;
+	}
 	    
-	Individual* mutante = individual_clona(x1, num_customers, num_vehicles);
+	Individual* mutante = individual_clona(x1, customers_num, vehicles_num);
 	
 	int **rotas = mutante->rotas,
 	    *fim_rotas = mutante->fim_rotas,
@@ -186,7 +193,7 @@ Individual* individual_generate_mutant(Individual* x1, Individual* x2, Individua
 	    *x3_posicoes_cidades = x3->posicoes[1];
 	
 	int qtd_componentes_perturbadas_atuais = 0,
-	    qtd_componentes_perturbadas = (num_customers/2.0) * F;
+	    qtd_componentes_perturbadas = (customers_num/2.0) * F;
 	do {
 		index_cidade_selecionada = (rand() % num_cidades_possiveis) +1;
 		cidade_escolhida = cidades_possiveis[index_cidade_selecionada];
@@ -235,7 +242,7 @@ Individual* individual_generate_mutant(Individual* x1, Individual* x2, Individua
 /* tipo_mutacao = 0 o individual target_index é a melhor solucao da populacao.
  * tipo_mutacao = 1 o individual target_index é aleatório.
  */
-Individual* mutation(Generation* generation, int target_index, Cidade* customers, int num_customers, int num_vehicles, int tipo_mutacao){
+Individual* mutation(Generation* generation, int target_idx, Customer* customers, int customers_num, int vehicles_num, int mutation_type) {
 	int r1 = rand() % NP;
 	int r2 = rand() % NP;
 	int r3 = rand() % NP;
@@ -247,32 +254,32 @@ Individual* mutation(Generation* generation, int target_index, Cidade* customers
 		r3 = rand() % NP;
 
 	if(tipo_mutacao == 0 && generation->best_solution != NULL)
-		return individual_gera_mutante(generation->best_solution, generation->individuals[r2], generation->individuals[r3], num_vehicles, num_customers);
+		return individual_gera_mutante(generation->best_solution, generation->individuals[r2], generation->individuals[r3], vehicles_num, customers_num);
 	
 	while(r1 == target_index || r1 == r2 || r1 == r3) 
 		r1 = rand() % NP;
 	
-	return individual_gera_mutante(generation->individuals[r1], generation->individuals[r2], generation->individuals[r3], num_vehicles, num_customers);
+	return individual_gera_mutante(generation->individuals[r1], generation->individuals[r2], generation->individuals[r3], vehicles_num, customers_num);
 }
 
 /* A cidade perturbada é a cidade da posicao antiga do individual, que será substituida pela cidade mutante. */
-Individual* crossover(Individual* x1, Individual* mutante, int crossover_binario, int num_customers, int num_vehicles){
+Individual* crossover(Individual* x1, Individual* mutant, int crossover_bin, int customers_num, int vehicles_num) {
 	int *mutante_fim_rotas = mutante->fim_rotas;
 	
-	int j_rand_rota = rand() % num_vehicles;
+	int j_rand_rota = rand() % vehicles_num;
 	while(mutante_fim_rotas[j_rand_rota] == 0) {
-		if(j_rand_rota < num_vehicles -1) {
+		if(j_rand_rota < vehicles_num -1) {
 			j_rand_rota++; 
 		} else  j_rand_rota = 0;
 	}
 	
 	int j_rand_componente = rand() % mutante_fim_rotas[j_rand_rota];
 	
-	int cidades_fechadas[num_customers];
-	memset(cidades_fechadas, 0, num_customers*sizeof(int));
+	int cidades_fechadas[customers_num];
+	memset(cidades_fechadas, 0, customers_num*sizeof(int));
 	cidades_fechadas[0] = 1;
 	
-	Individual* trial = individual_clona(x1, num_customers, num_vehicles);
+	Individual* trial = individual_clona(x1, customers_num, vehicles_num);
 	int* perturbado_fim_rotas = trial->fim_rotas;
 
 	double random;
@@ -327,7 +334,7 @@ Individual* crossover(Individual* x1, Individual* mutante, int crossover_binario
 		}
 	}
 	
-	for(i = 0; i < num_vehicles; i++){
+	for(i = 0; i < vehicles_num; i++){
 		for(j = 0; j < mutante->fim_rotas[i]; j++){
 			random = (double) rand() / RAND_MAX;
 			
@@ -385,8 +392,8 @@ FINALIZA_CROSSOVER:
 	return trial;
 }
 
-void EvolucaoDiferencial_1(int** distances, Cidade* customers, int num_customers, int num_vehicles, int max_capacity, int best_solution, int mutacao_rand, int crossover_binario) {
-	Generation *generation = generation_inicial(distances, customers, num_customers, num_vehicles, max_capacity),
+void differential_evolution_1(int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max, int best_solution, int mutation_rand, int crossover_bin) {
+	Generation *generation = generation_inicial(distances, customers, customers_num, vehicles_num, capacity_max),
 	        *generation2 = NULL;
 	
 	FILE *file_solucao = NULL,
@@ -406,7 +413,7 @@ void EvolucaoDiferencial_1(int** distances, Cidade* customers, int num_customers
 	    encontrou_best_solution = 0,
 	    melhor_fitness = generation->best_solution->cost;
 	do {
-		generation2 = nova_generation_1(generation, distances, customers, num_customers, num_vehicles, max_capacity, mutacao_rand, crossover_binario);
+		generation2 = nova_generation_1(generation, distances, customers, customers_num, vehicles_num, capacity_max, mutacao_rand, crossover_binario);
 		
 		if(melhor_fitness != generation2->best_solution->cost){
 			if(IMPRESSAO_ARQUIVO) {
@@ -420,7 +427,7 @@ void EvolucaoDiferencial_1(int** distances, Cidade* customers, int num_customers
 			melhor_fitness = generation2->best_solution->cost;
 		}
 		
-		generation = generation_libera(generation, num_vehicles);
+		generation = generation_libera(generation, vehicles_num);
 		generation = generation2;
 		qtd_geracoes++;
 		
@@ -440,7 +447,7 @@ void EvolucaoDiferencial_1(int** distances, Cidade* customers, int num_customers
 		}
 	
 		if(generation->best_solution != NULL) {
-			imprime_individual_arquivo(file_solucao, generation->best_solution, num_vehicles, num_customers);
+			imprime_individual_arquivo(file_solucao, generation->best_solution, vehicles_num, customers_num);
 		} else  fprintf(file_solucao, "\nNão houve solução viável.\n");
 		
 		printf("    Verifique o arquivo solucao.vrp no disco.\n");
@@ -454,23 +461,23 @@ void EvolucaoDiferencial_1(int** distances, Cidade* customers, int num_customers
 		}
 	
 		if(generation->best_solution != NULL) {
-			imprime_individual_terminal(generation->best_solution, num_vehicles, num_customers);
+			imprime_individual_terminal(generation->best_solution, vehicles_num, customers_num);
 		} else  printf("\nNão houve solução viável.\n");
 	}
 
 	generation_zera_clones(generation);
 	if(generation2->best_solution->cloned){
-		individual_libera(generation2->best_solution, num_vehicles);
+		individual_libera(generation2->best_solution, vehicles_num);
 	}
-	generation = generation_libera(generation, num_vehicles);
+	generation = generation_libera(generation, vehicles_num);
 	return;
 }
 
-void EvolucaoDiferencial_2(Cidade* customers, int num_customers, int num_vehicles, int max_capacity, int best_solution, int mutacao_rand, int crossover_binario) {
+void differential_evolution_2(Customer* customers, int customers_num, int vehicles_num, int capacity_max, int best_solution, int mutation_rand, int crossover_bin) {
 	return;
 }
 
-void EvolucaoDiferencial_2_rand_to_best(Cidade* customers, int num_customers, int num_vehicles, int max_capacity, int best_solution, int crossover_binario) {
+void differential_evolution_2_rand_to_best(Customer* customers, int customers_num, int vehicles_num, int capacity_max, int best_solution, int crossover_bin) {
 	return;
 }
 
@@ -480,10 +487,10 @@ int main(int argc, char *argv[]) {
 	CR = atof(argv[2]);
 	int semente = atoi(argv[4]);
 
-	int num_customers = 0,
-	    num_vehicles = 0,
+	int customers_num = 0,
+	    vehicles_num = 0,
 	    best_solution = 0,
-	    max_capacity = 0,
+	    capacity_max = 0,
 	  //  escolha = escolha_tecnica(),
 	    escolha = 2,
 	    crossover_binario = escolha % 2; //Se a escolha é impar o crossover é binario.
@@ -506,14 +513,14 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 	
-	fscanf(leitura, "%d %d %d %d", &num_vehicles, &best_solution, &num_customers, &max_capacity);
+	fscanf(leitura, "%d %d %d %d", &vehicles_num, &best_solution, &customers_num, &capacity_max);
 	
-	NP = 2 * num_customers;
+	NP = 2 * customers_num;
 	
-	Cidade customers[num_customers];
-	arquivo_inicializa_cidades(customers, leitura, num_customers);
+	Cidade customers[customers_num];
+	arquivo_inicializa_cidades(customers, leitura, customers_num);
 	
-	int** distances = matriz_custos_inicializa(customers, num_customers);
+	int** distances = matriz_custos_inicializa(customers, customers_num);
 
 	fclose(leitura);
 	
@@ -522,23 +529,23 @@ int main(int argc, char *argv[]) {
 	
 	switch(escolha) {//1 indica que o tipo de mutação é randomica (rand) e 0 utiliza o melhor individual (best).
 		case 1 :
-			EvolucaoDiferencial_1(distances, customers, num_customers, num_vehicles, max_capacity, best_solution, 1, crossover_binario); 
+			EvolucaoDiferencial_1(distances, customers, customers_num, vehicles_num, capacity_max, best_solution, 1, crossover_binario); 
 			break;
 		case 3:
-			EvolucaoDiferencial_1(distances, customers, num_customers, num_vehicles, max_capacity, best_solution, 0, crossover_binario);
+			EvolucaoDiferencial_1(distances, customers, customers_num, vehicles_num, capacity_max, best_solution, 0, crossover_binario);
 			break;
 		case 5:
-			EvolucaoDiferencial_2(customers, num_customers, num_vehicles, max_capacity, best_solution, 1, crossover_binario);
+			EvolucaoDiferencial_2(customers, customers_num, vehicles_num, capacity_max, best_solution, 1, crossover_binario);
 			break;
 		case 7:
-			EvolucaoDiferencial_2(customers, num_customers, num_vehicles, max_capacity, best_solution, 0, crossover_binario);
+			EvolucaoDiferencial_2(customers, customers_num, vehicles_num, capacity_max, best_solution, 0, crossover_binario);
 			break;
 		case 9:
-			EvolucaoDiferencial_2_rand_to_best(customers, num_customers, num_vehicles, max_capacity, best_solution, crossover_binario);
+			EvolucaoDiferencial_2_rand_to_best(customers, customers_num, vehicles_num, capacity_max, best_solution, crossover_binario);
 			break;
 	}
 	
-	distances = matriz_custos_libera(distances, num_customers);
+	distances = matriz_custos_libera(distances, customers_num);
 	return 0;
 }
 */
@@ -550,10 +557,10 @@ int main() {
 	
 	printf("ED Combinatória!\n\n");
 
-	int num_customers = 0,
-	    num_vehicles = 0,
+	int customers_num = 0,
+	    vehicles_num = 0,
 	    best_solution = 0,
-	    max_capacity = 0,
+	    capacity_max = 0,
 	    escolha = escolha_tecnica(),
 	    crossover_binario = escolha % 2; //Se a escolha é impar o crossover é binario.
 	    
@@ -590,15 +597,15 @@ int main() {
 		return 0;
 	}
 	
-	fscanf(leitura, "%d %d %d %d", &num_vehicles, &best_solution, &num_customers, &max_capacity);
+	fscanf(leitura, "%d %d %d %d", &vehicles_num, &best_solution, &customers_num, &capacity_max);
 	
-	//NP = 3 * num_customers;
+	//NP = 3 * customers_num;
 	printf("NP=%d\n", NP);
 	
-	Cidade customers[num_customers];
-	arquivo_inicializa_cidades(customers, leitura, num_customers);
+	Cidade customers[customers_num];
+	arquivo_inicializa_cidades(customers, leitura, customers_num);
 	
-	int** distances = matriz_custos_inicializa(customers, num_customers);
+	int** distances = matriz_custos_inicializa(customers, customers_num);
 
 	fclose(leitura);
 	
@@ -607,23 +614,23 @@ int main() {
 	
 	switch(escolha) {//1 indica que o tipo de mutação é randomica (rand) e 0 utiliza o melhor individual (best).
 		case 1 :
-			EvolucaoDiferencial_1(distances, customers, num_customers, num_vehicles, max_capacity, best_solution, 1, crossover_binario); 
+			EvolucaoDiferencial_1(distances, customers, customers_num, vehicles_num, capacity_max, best_solution, 1, crossover_binario); 
 			break;
 		case 3:
-			EvolucaoDiferencial_1(distances, customers, num_customers, num_vehicles, max_capacity, best_solution, 0, crossover_binario);
+			EvolucaoDiferencial_1(distances, customers, customers_num, vehicles_num, capacity_max, best_solution, 0, crossover_binario);
 			break;
 		case 5:
-			EvolucaoDiferencial_2(customers, num_customers, num_vehicles, max_capacity, best_solution, 1, crossover_binario);
+			EvolucaoDiferencial_2(customers, customers_num, vehicles_num, capacity_max, best_solution, 1, crossover_binario);
 			break;
 		case 7:
-			EvolucaoDiferencial_2(customers, num_customers, num_vehicles, max_capacity, best_solution, 0, crossover_binario);
+			EvolucaoDiferencial_2(customers, customers_num, vehicles_num, capacity_max, best_solution, 0, crossover_binario);
 			break;
 		case 9:
-			EvolucaoDiferencial_2_rand_to_best(customers, num_customers, num_vehicles, max_capacity, best_solution, crossover_binario);
+			EvolucaoDiferencial_2_rand_to_best(customers, customers_num, vehicles_num, capacity_max, best_solution, crossover_binario);
 			break;
 	}
 	
-	distances = matriz_custos_libera(distances, num_customers);
+	distances = matriz_custos_libera(distances, customers_num);
 	return 0;
 }
 
