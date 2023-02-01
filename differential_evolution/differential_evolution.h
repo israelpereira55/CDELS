@@ -40,12 +40,16 @@ void differential_evolution_2(Customer* customers, int customers_num, int vehicl
 
 void differential_evolution_2_rand_to_best(Customer* customers, int customers_num, int vehicles_num, int capacity_max, int best_solution, int crossover_bin);
 
-
-Individual* generate_new_mutant(Individual* x1, Individual* x2, Individual* x3, int vehicles_num, int customers_num);
-
 Individual* mutation(Generation* generation, int target_idx, Customer* customers, int customers_num, int vehicles_num, int mutation_type);
 
 Individual* crossover(Individual* x1, Individual* mutant, int crossover_bin, int customers_num, int vehicles_num);
+
+
+Individual* generate_new_mutant(Individual* x1, Individual* x2, Individual* x3, int vehicles_num, int customers_num);
+
+//generate new mutant continuous
+
+//
 
 
 #endif /*DIFFERENTIAL_EVOLUTION_H*/
