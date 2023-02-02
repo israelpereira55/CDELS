@@ -46,7 +46,7 @@ void individual_swap_customers(Individual* individual, int customer1, int load1,
 
 void individual_reinsert_customer_in_route(Individual* individual, int customer, int new_idx);
 
-void individual_insert_customer(Individual* individual, int customer, int load, int nex_idx, int new_route);
+void individual_insert_customer(Individual* individual, int customer, int load, int new_idx, int new_route);
 
 void individual_remove_customer(Individual* individual, int customer, int load);
 

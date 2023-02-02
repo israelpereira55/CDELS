@@ -114,11 +114,7 @@ Individual* individual_generate_top_to_down(int** distances, Customer* customers
 	cidades_visitadas[0] = 1;
 	cidades_fechadas[0] = 1;
 	
-	Individual* individual = individuo_inicializa(customers_num, vehicles_num);
-	int **routes = individual->routes,
-	    *routes_end = individual->routes_end,
-	    *posicoes_rotas = individual->positions[0],
-	    *posicoes_cidades = individual->positions[1];
+	Individual* individual = individual_init(customers_num, vehicles_num);
 	
 	int index = 0,
 	    num_cidades_visitadas = 1,
@@ -136,10 +132,10 @@ Individual* individual_generate_top_to_down(int** distances, Customer* customers
 			load = customers[random].demand;
 			vehicle_capacity += load;
 
-			if(vehicle_capacity < capacidade_max) {
-				routes[rotas_fechadas][index] = random;
-				posicoes_rotas[random] = rotas_fechadas;
-				posicoes_cidades[random] = index;
+			if(vehicle_capacity < capacity_max) {
+				individual->routes[rotas_fechadas][index] = random;
+				individual->positions[0][random] = rotas_fechadas;
+				individual->positions[1][random] = index;
 
 				cidades_fechadas[random] = 1;
 				num_cidades_fechadas++;
@@ -160,35 +156,36 @@ Individual* individual_generate_top_to_down(int** distances, Customer* customers
 			} else cidades_visitadas[i] = 0;
 		}
 
-		routes_end[rotas_fechadas] = index;
+		individual->routes_end[rotas_fechadas] = index;
 		index = 0;
 	}
 	
 	//Verificando viabilidade do individual.
 	if(num_cidades_fechadas == customers_num){
-		individuo_atualiza_atributos(individual, capacidade_max, vehicles_num, distances, customers);
+		individual_reevaluate(individual, capacity_max, vehicles_num, distances, customers);
 		return individual;
 	}
 	
 	/* Caso ainda existam customers que não foram alocadas em alguma route, elas serão inseridas na ultima route */
 	rotas_fechadas--;
-	index = routes_end[rotas_fechadas];
+	index = individual->routes_end[rotas_fechadas];
 	
 	for(i = 1; i < customers_num; i++){
 		if(!cidades_fechadas[i]){
-			routes[rotas_fechadas][index] = i;
-			posicoes_rotas[i] = rotas_fechadas;
-			posicoes_cidades[i] = index;
+			individual->routes[rotas_fechadas][index] = i;
+			individual->positions[0][i] = rotas_fechadas;
+			individual->positions[1][i] = index;
 			
 			index++;
 		}
 	}
 	
-	routes_end[rotas_fechadas] = index;
-	individuo_atualiza_atributos(individual, capacidade_max, vehicles_num, distances, customers);
+	individual->routes_end[rotas_fechadas] = index;
+	individual_reevaluate(individual, capacity_max, vehicles_num, distances, customers);
 	return individual;
 }
 
+//TODO: make top to down and down to top in the same function
 Individual* individual_gererate_down_to_top(int** distances, Customer* customers, int customers_num, int capacity_max, int vehicles_num) {
 	int load,
 	    random,
@@ -202,11 +199,7 @@ Individual* individual_gererate_down_to_top(int** distances, Customer* customers
 	cidades_visitadas[0] = 1;
 	cidades_fechadas[0] = 1;
 	
-	Individual* individual = individuo_inicializa(customers_num, vehicles_num);
-	int **routes = individual->routes,
-	    *routes_end = individual->routes_end,
-	    *posicoes_rotas = individual->positions[0],
-	    *posicoes_cidades = individual->positions[1];
+	Individual* individual = individual_init(customers_num, vehicles_num);
 	
 	int index = 0,
 	    num_cidades_visitadas = 1,
@@ -224,10 +217,10 @@ Individual* individual_gererate_down_to_top(int** distances, Customer* customers
 			load = customers[random].demand;
 			vehicle_capacity = vehicle_capacity + load;
 
-			if(vehicle_capacity < capacidade_max) {
-				routes[rotas_fechadas][index] = random;
-				posicoes_rotas[random] = rotas_fechadas;
-				posicoes_cidades[random] = index;
+			if(vehicle_capacity < capacity_max) {
+				individual->routes[rotas_fechadas][index] = random;
+				individual->positions[0][random] = rotas_fechadas;
+				individual->positions[1][random] = index;
 
 				cidades_fechadas[random] = 1;
 				num_cidades_fechadas++;
@@ -248,32 +241,32 @@ Individual* individual_gererate_down_to_top(int** distances, Customer* customers
 			} else  cidades_visitadas[i] = 0;
 		}
 
-		routes_end[rotas_fechadas] = index;
+		individual->routes_end[rotas_fechadas] = index;
 		index = 0;
 	}
 	
 	//Verificando viabilidade do individual.
 	if(num_cidades_fechadas == customers_num){
-		individuo_atualiza_atributos(individual, capacidade_max, vehicles_num, distances, customers);
+		individual_reevaluate(individual, capacity_max, vehicles_num, distances, customers);
 		return individual;
 	}
 	
 	/* Caso ainda existam customers que não foram alocadas em alguma route, elas serão inseridas na primeira route */
 	rotas_fechadas++;
-	index = routes_end[rotas_fechadas];
+	index = individual->routes_end[rotas_fechadas];
 	
 	for(i = 1; i < customers_num; i++){
 		if(!cidades_fechadas[i]){
-			routes[rotas_fechadas][index] = i;
-			posicoes_rotas[i] = rotas_fechadas;
-			posicoes_cidades[i] = index;
+			individual->routes[rotas_fechadas][index] = i;
+			individual->positions[0][i] = rotas_fechadas;
+			individual->positions[1][i] = index;
 			
 			index++;
 		}
 	}
 	
-	routes_end[rotas_fechadas] = index;	
-	individuo_atualiza_atributos(individual, capacidade_max, vehicles_num, distances, customers);
+	individual->routes_end[rotas_fechadas] = index;	
+	individual_reevaluate(individual, capacity_max, vehicles_num, distances, customers);
 	return individual;
 }
 		
@@ -290,7 +283,7 @@ void individual_update_attributes(Individual* individual, int capacity_max, int 
 	    cidade_atual,
 	    cidade_anterior;
 	    
-	individual->viavel = 1;
+	individual->feasible = 1;
 	individual->cost = 0;
 		
 	int i, j,
@@ -304,11 +297,11 @@ void individual_update_attributes(Individual* individual, int capacity_max, int 
 			componente = route[j];
 			vehicle_capacity += customers[componente].demand;
 		}
-		capacities_free[i] = capacidade_max - vehicle_capacity;
+		capacities_free[i] = capacity_max - vehicle_capacity;
 		
-		if(vehicle_capacity > capacidade_max && individual->viavel){
-			individual->viavel = 0;
-			individual->cost += PENALIDADE;
+		if(vehicle_capacity > capacity_max && individual->feasible){
+			individual->feasible = 0;
+			individual->cost += PENALTY;
 		}
 		
 		//Calculando o cost.
@@ -328,99 +321,97 @@ void individual_update_attributes(Individual* individual, int capacity_max, int 
 
 /* Não são clonadas as cargas disponiveis */
 Individual* individual_make_hard_clone(Individual* individual, int customers_num, int vehicles_num) {
-	Individual* clone = individuo_inicializa(customers_num, vehicles_num);
+	Individual* clone = individual_init(customers_num, vehicles_num);
 	
 	int **rotas_clone = clone->routes,
-	    **rotas_individuo = individual->routes;
+	    **rotas_individual = individual->routes;
 	
 	int *rota_clone,
-	    *rota_individuo,
+	    *rota_individual,
 	    *clone_fim_rotas = clone->routes_end,
-	    *individuo_fim_rotas = individual->routes_end;
+	    *individual_fim_rotas = individual->routes_end;
 	    
 	int *posicoes_clone_rotas = clone->positions[0],
 	    *posicoes_clone_cidades = clone->positions[1],
-	    *posicoes_individuo_rotas = individual->positions[0],
-	    *posicoes_individuo_cidades = individual->positions[1];
+	    *posicoes_individual_rotas = individual->positions[0],
+	    *posicoes_individual_cidades = individual->positions[1];
 	    
 	int i, j,
 	    fim_rota = 0;
 	for(i = 0; i < vehicles_num; i++) {
 		rota_clone = rotas_clone[i];
-		rota_individuo = rotas_individuo[i];
-		clone_fim_rotas[i] = individuo_fim_rotas[i];
+		rota_individual = rotas_individual[i];
+		clone_fim_rotas[i] = individual_fim_rotas[i];
 		
-		fim_rota = individuo_fim_rotas[i];
+		fim_rota = individual_fim_rotas[i];
 		for(j = 0; j < fim_rota; j++)
-			rota_clone[j] = rota_individuo[j];
+			rota_clone[j] = rota_individual[j];
 	}
 	
 	for(j = 0; j < customers_num; j++){
-		posicoes_clone_rotas[j] = posicoes_individuo_rotas[j];
-		posicoes_clone_cidades[j] = posicoes_individuo_cidades[j];
+		posicoes_clone_rotas[j] = posicoes_individual_rotas[j];
+		posicoes_clone_cidades[j] = posicoes_individual_cidades[j];
 	}
 
 	clone->cost = individual->cost;
-	clone->viavel = individual->viavel;
+	clone->feasible = individual->feasible;
 	return clone;
 }
 
 /* Deve ser inserido em outra route */
-void individual_insert_customer(Individual* individual, int customer, int load, int nex_idx, int new_route) {
-	int *posicoes_cidades = individual->positions[1],
-	    *route = individual->routes[nova_rota],
-	     posicao = individual->routes_end[nova_rota];
+void individual_insert_customer(Individual* individual, int customer, int load, int new_idx, int new_route) {
+	int *route = individual->routes[new_route],
+	     posicao = individual->routes_end[new_route];
 	
 	int cidade_selecionada;
-	while(posicao > nova_posicao){
+	while(posicao > new_idx){
 		cidade_selecionada = route[posicao -1];
 		route[posicao] = cidade_selecionada;
-		posicoes_cidades[cidade_selecionada]++;
+		individual->positions[1][cidade_selecionada]++;
 		posicao--;
 	}
 	
-	individual->positions[0][customer] = nova_rota;
+	individual->positions[0][customer] = new_route;
 	route[posicao] = customer;
-	posicoes_cidades[customer] = posicao;
-	individual->routes_end[nova_rota]++;
+	individual->positions[1][customer] = posicao;
+	individual->routes_end[new_route]++;
 	
-	individual->capacities_free[nova_rota] -= load; 
+	individual->capacities_free[new_route] -= load; 
 	return;
 }
 
 void individual_reinsert_customer_in_route(Individual* individual, int customer, int new_idx) {
-	int *posicoes_cidades = individual->positions[1],
-	    *route = individual->routes[ individual->positions[0][customer] ],
-	     posicao = posicoes_cidades[customer];
+	int *route = individual->routes[ individual->positions[0][customer] ],
+	     posicao = individual->positions[1][customer];
 
 	int cidade_selecionada;
-	if(novo_index < posicao){
-		while(posicao > novo_index){
+	if(new_idx < posicao){
+		while(posicao > new_idx){
 			cidade_selecionada = route[posicao -1];
 			route[posicao] = cidade_selecionada;
-			posicoes_cidades[cidade_selecionada]++;
+			individual->positions[1][cidade_selecionada]++;
 			posicao--;
 		}
 		
 		route[posicao] = customer;
-		posicoes_cidades[customer] = posicao;
+		individual->positions[1][customer] = posicao;
 		return;
 	}
 	
-	novo_index--;
-	while(posicao < novo_index){
+	new_idx--;
+	while(posicao < new_idx){
 		cidade_selecionada = route[posicao +1];
 		route[posicao] = cidade_selecionada;
-		posicoes_cidades[cidade_selecionada]--;
+		individual->positions[1][cidade_selecionada]--;
 		posicao++;
 	}
 	
 	route[posicao] = customer;
-	posicoes_cidades[customer] = posicao;
+	individual->positions[1][customer] = posicao;
 	return;
 }
 /* Sem uso
-void individuo_insere_cidade_fim_rota(Individual* individual, int customer, int load, int route){
+void individual_insere_cidade_fim_rota(Individual* individual, int customer, int load, int route){
 	int index = individual->routes_end[route];
 	individual->routes_end[route]++;
 
@@ -437,30 +428,29 @@ void individual_swap_customers(Individual* individual, int customer1, int load1,
 	    *posicoes_rotas = individual->positions[0],
 	    *posicoes_cidades = individual->positions[1];
 	
-	int rota1 = posicoes_rotas[cidade1],
-	    posicao1 = posicoes_cidades[cidade1],
-	    rota2 = posicoes_rotas[cidade2],
-	    posicao2 = posicoes_cidades[cidade2];
+	int rota1 = posicoes_rotas[customer1],
+	    posicao1 = posicoes_cidades[customer1],
+	    rota2 = posicoes_rotas[customer2],
+	    posicao2 = posicoes_cidades[customer2];
 	
-	routes[rota2][posicao2] = cidade1;
-	routes[rota1][posicao1] = cidade2;
+	routes[rota2][posicao2] = customer1;
+	routes[rota1][posicao1] = customer2;
 	
-	posicoes_rotas[cidade2] = rota1;
-	posicoes_cidades[cidade2] = posicao1;
-	individual->capacities_free[rota1] = individual->capacities_free[rota1] + carga1 - carga2;
+	posicoes_rotas[customer2] = rota1;
+	posicoes_cidades[customer2] = posicao1;
+	individual->capacities_free[rota1] = individual->capacities_free[rota1] + load1 - load2;
 
-	posicoes_rotas[cidade1] = rota2;
-	posicoes_cidades[cidade1] = posicao2;
-	individual->capacities_free[rota2] = individual->capacities_free[rota2] - carga1 + carga2;
+	posicoes_rotas[customer1] = rota2;
+	posicoes_cidades[customer1] = posicao2;
+	individual->capacities_free[rota2] = individual->capacities_free[rota2] - load1 + load2;
 
 	return;
 }
 
 void individual_remove_customer(Individual* individual, int customer, int load) { //TODO: pass customer instead
-	int *posicoes_cidades = individual->positions[1],
-	     num_rota = individual->positions[0][customer],
+	int  num_rota = individual->positions[0][customer],
 	     fim_rota = individual->routes_end[num_rota],
-	     index = posicoes_cidades[customer];
+	     index = individual->positions[1][customer];
 	
 	individual->capacities_free[num_rota] += load;
 	individual->routes_end[num_rota]--;
@@ -474,7 +464,7 @@ void individual_remove_customer(Individual* individual, int customer, int load) 
 	while(index < fim_rota -1){
 		nova_cidade =  route[index +1];
 		route[index] = nova_cidade;
-		posicoes_cidades[nova_cidade] = index;
+		individual->positions[1][nova_cidade] = index;
 		index++;
 	}
 	return;
