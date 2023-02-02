@@ -148,15 +148,6 @@ int main() {
         case 3:
             EvolucaoDiferencial_1(distances, customers, customers_num, vehicles_num, capacity_max, best_solution, 0, crossover_binario);
             break;
-        case 5:
-            EvolucaoDiferencial_2(customers, customers_num, vehicles_num, capacity_max, best_solution, 1, crossover_binario);
-            break;
-        case 7:
-            EvolucaoDiferencial_2(customers, customers_num, vehicles_num, capacity_max, best_solution, 0, crossover_binario);
-            break;
-        case 9:
-            EvolucaoDiferencial_2_rand_to_best(customers, customers_num, vehicles_num, capacity_max, best_solution, crossover_binario);
-            break;
     }
     
     distances = matriz_custos_libera(distances, customers_num);
