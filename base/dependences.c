@@ -277,7 +277,7 @@ Individual* individual_gererate_down_to_top(int** distances, Customer* customers
 	return individual;
 }
 		
-void ndividual_update_attributes(Individual* individual, int capacity_max, int vehicles_num, int** distances, Customer* customers) {
+void individual_update_attributes(Individual* individual, int capacity_max, int vehicles_num, int** distances, Customer* customers) {
 	int **routes = individual->routes;
 	
 	int *route,

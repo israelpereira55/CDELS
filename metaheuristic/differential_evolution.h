@@ -36,10 +36,6 @@ Generation* generation_free(Generation* generation, int vehicles_num);
 
 void differential_evolution_1(int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max, int best_solution, int mutation_rand, int crossover_bin);
 
-void differential_evolution_2(Customer* customers, int customers_num, int vehicles_num, int capacity_max, int best_solution, int mutation_rand, int crossover_bin);
-
-void differential_evolution_2_rand_to_best(Customer* customers, int customers_num, int vehicles_num, int capacity_max, int best_solution, int crossover_bin);
-
 Individual* mutation(Generation* generation, int target_idx, Customer* customers, int customers_num, int vehicles_num, int mutation_type);
 
 Individual* crossover(Individual* x1, Individual* mutant, int crossover_bin, int customers_num, int vehicles_num);
@@ -48,6 +44,9 @@ Individual* crossover(Individual* x1, Individual* mutant, int crossover_bin, int
 Individual* generate_new_mutant(Individual* x1, Individual* x2, Individual* x3, int vehicles_num, int customers_num);
 
 //generate new mutant continuous
+
+
+void generation_clear_cloned_flags(Generation* generation);
 
 
 #endif /*DIFFERENTIAL_EVOLUTION_H*/

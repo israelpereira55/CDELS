@@ -3,29 +3,29 @@
 
 #include <stdio.h>
 
-#include "dependencias.h"
-#include "../HeadED/EvolucaoDiferencial.h"
+#include "dependences.h"
+#include "../metaheuristic/differential_evolution.h"
 
 
 int escolha_tecnica();
 
-void arquivo_inicializa_cidades(Cidade* cidades, FILE* leitura, int num_cidades);
+void arquivo_inicializa_cidades(Customer* customers, FILE* leitura, int customers_num);
 
-void cidades_atualiza_demanda(Cidade* cidades, FILE* leitura, int num_cidades);
-
-
-void imprime_individuo_terminal(Individuo* individuo, int num_veiculos, int num_cidades);
-
-void imprime_relatorio_terminal(Geracao* geracao);
+void cidades_atualiza_demanda(Customer* customers, FILE* leitura, int customers_num);
 
 
-void imprime_individuo_arquivo(FILE* arquivo, Individuo* individuo, int num_veiculos, int num_cidades);
+void imprime_individual_terminal(Individual* individual, int vehicles_num, int customers_num);
 
-void imprime_relatorio_arquivo(FILE* arquivo, Geracao* geracao);
+void imprime_relatorio_terminal(Generation* generation);
+
+
+void imprime_individual_arquivo(FILE* arquivo, Individual* individual, int vehicles_num, int customers_num);
+
+void imprime_relatorio_arquivo(FILE* arquivo, Generation* generation);
 
 
 //Apenas para testes.
-void testa_individuo(Individuo* individuo, Cidade* cidades, int num_cidades, int num_veiculos); 
+void testa_individual(Individual* individual, Customer* customers, int customers_num, int vehicles_num); 
 
 
 #endif /*ARQUIVO_H_*/
