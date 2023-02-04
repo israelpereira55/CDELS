@@ -4,22 +4,22 @@
 typedef struct customer Customer;
 
 struct customer {
-	int	id,		/* Customer number */
-		demand; /* Customer demand */
-	double x,y; /* Customer 2D position */
+    int id,     /* Customer number */
+        demand; /* Customer demand */
+    double x,y; /* Customer 2D position */
 };
 
 
 typedef struct individual Individual;
 
 struct individual {
-	int **routes,		/* Matrix of vector, each vector represents a route */
-	    **positions,	/* 2D vector. Each index i presents the position of the customer i in routes. First vector presents the route number and second presents the route index */
-	     *routes_end,	/* Number of customers each route contains */
-	     *capacities_free;	/* Available load/demand each route/vehicle has */
-	int cost,			/* Individual cost/objective function */
-	    feasible,		/* A flag to represent if the individual is feasible */ //TODO: make enum?
-	    cloned;			/* A flag to represent if the individual is cloned */ //TODO: define cloned better; SOFT CLONE AND HARD CLONE
+    int **routes,       /* Matrix of vector, each vector represents a route */
+        **positions,    /* 2D vector. Each index i presents the position of the customer i in routes. First vector presents the route number and second presents the route index */
+         *routes_end,   /* Number of customers each route contains */
+         *capacities_free;  /* Available load/demand each route/vehicle has */
+    int cost,           /* Individual cost/objective function */
+        feasible,       /* A flag to represent if the individual is feasible */ //TODO: make enum?
+        cloned;         /* A flag to represent if the individual is cloned */ //TODO: define cloned better; SOFT CLONE AND HARD CLONE
 };
 
 

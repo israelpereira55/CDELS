@@ -18,15 +18,15 @@ enum CrossoverType { CROSSOVER_BIN, CROSSOVER_EXP };
 typedef struct generation Generation;
 
 struct generation{
-	int 		id;
-	Individual	**individuals;
-	Individual	*best_solution;
-	int			feasible_solutions_num;
+    int         id;
+    Individual  **individuals;
+    Individual  *best_solution;
+    int         feasible_solutions_num;
 };
 
 
 Generation* generation_init();
-			
+            
 Generation* initial_population(int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max);
 
 Generation* new_generation(Generation* generation, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max, int mutation_rand, int crossover_bin);
