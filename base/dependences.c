@@ -187,8 +187,9 @@ Individual* individual_generate_top_to_down(int** distances, Customer* customers
     return individual;
 }
 
+
 //TODO: make top to down and down to top in the same function
-Individual* individual_gererate_down_to_top(int** distances, Customer* customers, int customers_num, int capacity_max, int vehicles_num) {
+Individual* individual_generate_down_to_top(int** distances, Customer* customers, int customers_num, int capacity_max, int vehicles_num) {
     int load,
         random,
         route_load;
@@ -272,7 +273,7 @@ Individual* individual_gererate_down_to_top(int** distances, Customer* customers
     return individual;
 }
 		
-void individual_update_attributes(Individual* individual, int capacity_max, int vehicles_num, int** distances, Customer* customers) {
+void individual_reevaluate(Individual* individual, int capacity_max, int vehicles_num, int** distances, Customer* customers) {
 	int *route,
 	    *routes_end = individual->routes_end,
 	    *capacities_free = individual->capacities_free;

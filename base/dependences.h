@@ -55,4 +55,4 @@ void individual_reevaluate(Individual* individual, int capacity_max, int vehicle
 Individual* individual_make_hard_clone(Individual* individual, int customers_num, int vehicles_num);
 
 
-#endif /*DEPENDENCES_H*/
+#endif /* DEPENDENCES_H */

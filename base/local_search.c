@@ -153,7 +153,7 @@ void two_swap(Individual* individual, int** distances, Customer* customers, int 
 	int cost_new,
 	    original_cost = individual->cost;
 	 
-	int it_got_improvement;
+	int it_got_improvement = 0;
 	    
 	for (routei = 0; routei < vehicles_num; routei++) {
 	
@@ -542,7 +542,7 @@ void drop_one_point(Individual* individual, int** distances, Customer* customers
 	int* posicoes_rotas = individual->positions[0];
 
 	int index,
-	    obteve_melhora,
+	    got_improvement,
 	    max_index_rotas,
 	    rota_selecionada,
 	    cidade_perturbada,
@@ -577,9 +577,9 @@ void drop_one_point(Individual* individual, int** distances, Customer* customers
 
 		num_rota = rotas_selecionadas[rand() % max_index_rotas]; //nova route.
 		rota_selecionada = posicoes_rotas[cidade_perturbada];
-		obteve_melhora = reinsert_customer_best_position_in_another_route_if_improves(individual, distances, cidade_perturbada, load, num_rota);
+		got_improvement = reinsert_customer_best_position_in_another_route_if_improves(individual, distances, cidade_perturbada, load, num_rota);
 
-		if (obteve_melhora) {
+		if (got_improvement) {
 			capacities_free[num_rota] -= load;
 			capacities_free[rota_selecionada] += load;
 
@@ -662,7 +662,7 @@ void flip(Individual* individual, int** distances, Customer* customers, int vehi
 	    nova_posicao = 0,
 	    cidade_anterior,
 	    cidade_posterior,
-	    obteve_melhora,
+	    got_improvement,
 	    houve_melhora_mov,
 	    original_cost = individual->cost;
 
@@ -673,7 +673,7 @@ void flip(Individual* individual, int** distances, Customer* customers, int vehi
 		num_rota = 0;
 		houve_melhora_mov = 0;
 		do {
-			obteve_melhora = 0;
+			got_improvement = 0;
 			fim_rota = individual->routes_end[num_rota];
 			if (fim_rota < 2) {
 				if (num_rota +1 < vehicles_num) {
@@ -708,7 +708,7 @@ void flip(Individual* individual, int** distances, Customer* customers, int vehi
 				if (cost_new < original_cost) {
 					original_cost = cost_new;
 					nova_posicao = index;		
-					obteve_melhora = houve_melhora_mov = 1;
+					got_improvement = houve_melhora_mov = 1;
 				}
 
 				index++;
@@ -718,7 +718,7 @@ void flip(Individual* individual, int** distances, Customer* customers, int vehi
 				cidade_posterior = route[index];
 			}
 
-			if (obteve_melhora) {
+			if (got_improvement) {
 				individual_reinsert_customer_in_route(individual, customer, nova_posicao);
 				individual->cost = original_cost;
 			}
@@ -865,8 +865,8 @@ void strong_drop_one_point(Individual* individual, int** distances, Customer* cu
 	    num_rota,
 	    rota_selecionada;
 
-	int obteve_melhora = 0,
-	    carga_anterior = -1;
+	int got_improvement = 0,
+	    load_old = -1; //TODO: use load, new load instead?
 	
 	int* route = NULL;
 	
@@ -875,7 +875,7 @@ void strong_drop_one_point(Individual* individual, int** distances, Customer* cu
 	
 		route = individual->routes[num_rota];
 		fim_rota = individual->routes_end[num_rota];
-		carga_anterior = -1;
+		load_old = -1;
 		
 		/*Se a route só possui uma customer, esta customer será mantida */
 		if (fim_rota > 1) { 
@@ -884,7 +884,7 @@ void strong_drop_one_point(Individual* individual, int** distances, Customer* cu
 				load = customers[customer].demand;
 				
 				/* Se a load atual é maior que a load anterior ou houve melhora, é necessário recalcular as routes possiveis */
-				if (load > carga_anterior || obteve_melhora) {
+				if (load > load_old || got_improvement) {
 					//Seleciona as routes possiveis, diferentes da route atual, para efetuar o movimento.
 					index = 0;
 					for (k = 0; k < vehicles_num; k++) {
@@ -895,21 +895,21 @@ void strong_drop_one_point(Individual* individual, int** distances, Customer* cu
 					}
 				}
 				
-				obteve_melhora = 0;
+				got_improvement = 0;
 				for (l = 0; l < index; l++) {
 					rota_selecionada = rotas_possiveis[l];
-					if (!obteve_melhora) {
-						obteve_melhora = reinsert_customer_best_position_in_another_route_if_improves(individual, distances, customer, load, rota_selecionada);
+					if (!got_improvement) {
+						got_improvement = reinsert_customer_best_position_in_another_route_if_improves(individual, distances, customer, load, rota_selecionada);
 					} else {
 						reinsert_customer_best_position_in_another_route_if_improves(individual, distances, customer, load, rota_selecionada);
 					}
 				}
 					
 				/* Com a melhora, o tamanho das routes modificaram */
-				if (obteve_melhora)
+				if (got_improvement)
 					fim_rota = individual->routes_end[num_rota];
 				
-				carga_anterior = load;
+				load_old = load;
 			}
 		}
 	}

@@ -6,9 +6,10 @@
 
 #include "base/local_search.h"
 #include "base/dependences.h"
-#include "base/arquivo.h"
+#include "base/file_tools.h"
 #include "metaheuristic/differential_evolution.h"
 
+int NP;
 
 int main() {
     //F = 0.1;
@@ -44,7 +45,7 @@ int main() {
 
     if (!crossover_binario) escolha--;
     
-    printf("F=%.2lf, CR=%.2lf, PENA=%d\n", F, CR, PENALIDADE);
+    printf("F=%.2lf, CR=%.2lf, PENA=%d\n", F, CR, PENALTY);
     
     char nome[81];
 
@@ -59,13 +60,13 @@ int main() {
     
     fscanf(leitura, "%d %d %d %d", &vehicles_num, &best_solution, &customers_num, &capacity_max);
     
-    //NP = 3 * customers_num;
+    NP = 3 * customers_num;
     printf("NP=%d\n", NP);
     
-    Cidade customers[customers_num];
-    arquivo_inicializa_cidades(customers, leitura, customers_num);
+    Customer customers[customers_num];
+    file_customers_init(customers, leitura, customers_num);
     
-    int** distances = matriz_custos_inicializa(customers, customers_num);
+    int** distances = distances_matrix_init(customers, customers_num);
 
     fclose(leitura);
     
@@ -81,6 +82,6 @@ int main() {
             break;
     }
     
-    distances = matriz_custos_libera(distances, customers_num);
+    distances = distances_matrix_free(distances, customers_num);
     return 0;
 }

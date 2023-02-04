@@ -6,12 +6,12 @@
 
 #include "../base/local_search.h"
 #include "../base/dependences.h"
-#include "../base/arquivo.h"
+#include "../base/file_tools.h"
 
 #include "../metaheuristic/differential_evolution.h"
 
 //double F, CR;
-//int NP;
+extern int NP;
 
 Generation* generation_init() {
 	static int id = 1;
@@ -388,16 +388,16 @@ void differential_evolution(int** distances, Customer* customers, int customers_
 	Generation *generation = initial_population(distances, customers, customers_num, vehicles_num, capacity_max),
 	        *generation2 = NULL;
 	
-	FILE *file_solucao = NULL,
-	     *relatorio = NULL;
+	FILE *file_solution = NULL,
+	     *file_report = NULL;
 	
 	if (PRINT_IN_FILE) {
-		file_solucao = fopen("solucao.vrp", "w");
-		relatorio = fopen("relatorio.ed", "w");
-		imprime_relatorio_arquivo(relatorio, generation);
-		fprintf(relatorio, "\n");
+		file_solution = fopen("solucao.vrp", "w");
+		file_report = fopen("report.txt", "w");
+		generation_print_report_in_file(file_report, generation);
+		fprintf(file_report, "\n");
 	} else {
-		imprime_relatorio_terminal(generation);
+		generation_print_report(generation);
 		printf("\n");
 	}
 	
@@ -409,10 +409,10 @@ void differential_evolution(int** distances, Customer* customers, int customers_
 		
 		if (best_fitness != generation2->best_solution->cost) {
 			if (PRINT_IN_FILE) {
-				imprime_relatorio_arquivo(relatorio, generation2);
-				fprintf(relatorio, "\n");
+				generation_print_report_in_file(file_report, generation2);
+				fprintf(file_report, "\n");
 			} else {
-				imprime_relatorio_terminal(generation2);
+				generation_print_report(generation2);
 				printf("\n");
 			}
 			
@@ -434,26 +434,26 @@ void differential_evolution(int** distances, Customer* customers, int customers_
 
 	if (PRINT_IN_FILE) {
 		if (generations_cnt == MAX_GEN) {
-			imprime_relatorio_arquivo(relatorio, generation2);
-			fprintf(relatorio, "\n");
+			generation_print_report_in_file(file_report, generation2);
+			fprintf(file_report, "\n");
 		}
 	
 		if (generation->best_solution != NULL) {
-			imprime_individual_arquivo(file_solucao, generation->best_solution, vehicles_num, customers_num);
-		} else  fprintf(file_solucao, "\nNão houve solução viável.\n");
+			individual_print_in_file(file_solution, generation->best_solution, vehicles_num, customers_num);
+		} else  fprintf(file_solution, "\nNão houve solução viável.\n");
 		
 		printf("    Verifique o arquivo solucao.vrp no disco.\n");
-		fclose(relatorio);
-		fclose(file_solucao);
+		fclose(file_report);
+		fclose(file_solution);
 		
 	} else {
 		if (generations_cnt == MAX_GEN) {
-			imprime_relatorio_terminal(generation2);
+			generation_print_report(generation2);
 			printf("\n");
 		}
 	
 		if (generation->best_solution != NULL) {
-			imprime_individual_terminal(generation->best_solution, vehicles_num, customers_num);
+			individual_print(generation->best_solution, vehicles_num, customers_num);
 		} else  printf("\nNão houve solução viável.\n");
 	}
 
