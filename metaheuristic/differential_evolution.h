@@ -34,7 +34,7 @@ Generation* new_generation(Generation* generation, int** distances, Customer* cu
 Generation* generation_free(Generation* generation, int vehicles_num);
 
 
-void differential_evolution_1(int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max, int best_solution, int mutation_rand, int crossover_bin);
+void differential_evolution(int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max, int best_solution, int mutation_rand, int crossover_bin);
 
 Individual* mutation(Generation* generation, int target_idx, Customer* customers, int customers_num, int vehicles_num, int mutation_type);
 

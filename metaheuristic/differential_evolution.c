@@ -20,7 +20,7 @@ Generation* generation_init() {
 	generation->individuals = (Individual**) malloc (NP * sizeof(Individual*));
 
 /*	int i = 0;
-	while(i < NP) {
+	while (i < NP) {
 		generation->individuals[i] = NULL;
 		i++;
 	}
@@ -39,7 +39,7 @@ Generation* initial_population(int** distances, Customer* customers, int custome
 	
 	//TODO: remove and include in loop
 	int select = rand() % 2;
-	if(select == 1) {
+	if (select == 1) {
 		individual = individual_generate_top_to_down(distances, customers, customers_num, capacity_max, vehicles_num);
 	} else {
 		individual = individual_generate_down_to_top(distances, customers, customers_num, capacity_max, vehicles_num);
@@ -48,13 +48,13 @@ Generation* initial_population(int** distances, Customer* customers, int custome
 	generation->individuals[0] = individual;
 	generation->best_solution = individual;
 	
-	if(individual->feasible)
+	if (individual->feasible)
 		generation->feasible_solutions_num++;
 	
 	int i = 1;
-	while(i < NP) {
+	while (i < NP) {
 		select = rand() % 2;
-		if(select == 1) {
+		if (select == 1) {
 			individual = individual_generate_top_to_down(distances, customers, customers_num, capacity_max, vehicles_num);
 		} else {
 			individual = individual_generate_down_to_top(distances, customers, customers_num, capacity_max, vehicles_num);
@@ -62,9 +62,9 @@ Generation* initial_population(int** distances, Customer* customers, int custome
 
 		generation->individuals[i] = individual;
 
-		if(individual->feasible) {
+		if (individual->feasible) {
 			generation->feasible_solutions_num++;
-			if(individual->cost < generation->best_solution->cost)
+			if (individual->cost < generation->best_solution->cost)
 				generation->best_solution = individual;
 		}
 		i++;
@@ -73,10 +73,10 @@ Generation* initial_population(int** distances, Customer* customers, int custome
 	return generation;
 }
 
-void generation_clear_cloned_flags(Generation* generation){
+void generation_clear_cloned_flags(Generation* generation) {
 	int i;
-	for(i = 0; i < NP; i++){
-		if(generation->individuals[i]->cloned){
+	for (i = 0; i < NP; i++) {
+		if (generation->individuals[i]->cloned) {
 			generation->individuals[i]->cloned = 0;
 		}
 	}
@@ -90,13 +90,13 @@ Generation* new_generation(Generation* generation, int** distances, Customer* cu
 	Generation* generation2 = generation_init();
 	generation2->best_solution = generation->best_solution;
 
-	if(generation2->best_solution != NULL)
+	if (generation2->best_solution != NULL)
 		generation2->best_solution->cloned = 1;
 
 	int generation2_has_best_solution_generation1 = 0;
 	
 	int target_idx = 0;
-	while(target_idx < NP) {
+	while (target_idx < NP) {
 		mutant = mutation(generation, target_idx, customers, customers_num, vehicles_num, mutation_rand);
 		target = generation->individuals[target_idx];
 		trial = crossover(target, mutant, crossover_bin, customers_num, vehicles_num);
@@ -106,13 +106,13 @@ Generation* new_generation(Generation* generation, int** distances, Customer* cu
 
 		local_search(trial, distances, customers, customers_num, vehicles_num, capacity_max);
 		
-		if(trial->cost < target->cost){
-			if(trial->feasible){
+		if (trial->cost < target->cost) {
+			if (trial->feasible) {
 				generation2->feasible_solutions_num++;
-				if(generation2->best_solution != NULL){
-					if(trial->cost < generation2->best_solution->cost){	
+				if (generation2->best_solution != NULL) {
+					if (trial->cost < generation2->best_solution->cost) {	
 				
-						if(generation2->best_solution->cloned){
+						if (generation2->best_solution->cloned) {
 							generation2->best_solution->cloned = 0;
 						}
 						generation2->best_solution = trial;
@@ -122,7 +122,7 @@ Generation* new_generation(Generation* generation, int** distances, Customer* cu
 				generation2->individuals[target_idx] = trial;
 				
 			/* Se o trial for inviável mas tiver cost melhor que o melhor individual, ele nao substituirá o target_idx (best). */	
-			} else if(target == generation2->best_solution){
+			} else if (target == generation2->best_solution) {
 				generation2->individuals[target_idx] = target;
 				target->cloned = 1;
 				generation2->feasible_solutions_num++;
@@ -136,17 +136,17 @@ Generation* new_generation(Generation* generation, int** distances, Customer* cu
 			target->cloned = 1;
 			trial = individual_free(trial, vehicles_num);
 			
-			if(target->feasible){
+			if (target->feasible) {
 				generation2->feasible_solutions_num++;
 				
-				if(target == generation2->best_solution)
+				if (target == generation2->best_solution)
 					generation2_has_best_solution_generation1 = 1;
 			}
 		}
 		target_idx++; //TODO: can go to a for
 	}
 
-	if(generation2_has_best_solution_generation1)
+	if (generation2_has_best_solution_generation1)
 		generation->best_solution->cloned = 1;
 	
 	return generation2;
@@ -156,8 +156,8 @@ Generation* new_generation(Generation* generation, int** distances, Customer* cu
 Generation* generation_free(Generation* generation, int vehicles_num) {
 	int i;
 
-	for(i = 0; i < NP; i++) {
-		if(!generation->individuals[i]->cloned){
+	for (i = 0; i < NP; i++) {
+		if (!generation->individuals[i]->cloned) {
 			generation->individuals[i] = individual_free(generation->individuals[i], vehicles_num);
 		}
 	}
@@ -180,7 +180,7 @@ Individual* generate_new_mutant(Individual* x1, Individual* x2, Individual* x3, 
 	int customers_possible_num = customers_num -1, //TODO: rethink name, i believe its counting with 0 (do/while reasons)
 	    random_idx = 0;
 	    
-	for(int index = 0; index < customers_num; index++){
+	for (int index = 0; index < customers_num; index++) {
 		customers_possible[index] = index;
 	}
 	    
@@ -196,7 +196,7 @@ Individual* generate_new_mutant(Individual* x1, Individual* x2, Individual* x3, 
 		mutant_route_idx = x3->positions[0][customer_chosen];
 		mutant_visitation_idx = x3->positions[1][customer_chosen];
 		
-		if(mutant->routes_end[mutant_route_idx] < mutant_visitation_idx +1){ /* A rota nao possui a quantidade de customers necessária. Entao a cidade será inserida ao fim da rota. */
+		if (mutant->routes_end[mutant_route_idx] < mutant_visitation_idx +1) { /* A rota nao possui a quantidade de customers necessária. Entao a cidade será inserida ao fim da rota. */
 			individual_remove_customer(mutant, customer_chosen, 0);
 
 			/* Inserindo a cidade na rota. */
@@ -223,14 +223,14 @@ Individual* generate_new_mutant(Individual* x1, Individual* x2, Individual* x3, 
 			mutant->positions[1][customer_target] = index_target;
 		}
 		
-		while(random_idx < customers_possible_num -1){
+		while (random_idx < customers_possible_num -1) {
 			customers_possible[random_idx] = customers_possible[random_idx +1];
 			random_idx++;
 		} 
 		customers_possible_num--;
 		
 		pertubed_components_cnt++;
-	}while (pertubed_components_cnt < pertubed_components_max);
+	} while (pertubed_components_cnt < pertubed_components_max);
 
 	return mutant;
 }
@@ -244,16 +244,16 @@ Individual* mutation(Generation* generation, int target_idx, Customer* customers
 	int r2 = rand() % NP;
 	int r3 = rand() % NP;
 
-	while(r2 == target_idx) 
+	while (r2 == target_idx) 
 		r2 = rand() % NP;
 	
-	while(r3 == target_idx || r3 == r2) 
+	while (r3 == target_idx || r3 == r2) 
 		r3 = rand() % NP;
 
-	if(mutation_type == 0 && generation->best_solution != NULL)
+	if (mutation_type == 0 && generation->best_solution != NULL)
 		return generate_new_mutant(generation->best_solution, generation->individuals[r2], generation->individuals[r3], vehicles_num, customers_num);
 	
-	while(r1 == target_idx || r1 == r2 || r1 == r3) 
+	while (r1 == target_idx || r1 == r2 || r1 == r3) 
 		r1 = rand() % NP;
 	
 	return generate_new_mutant(generation->individuals[r1], generation->individuals[r2], generation->individuals[r3], vehicles_num, customers_num);
@@ -273,8 +273,8 @@ Individual* crossover(Individual* x1, Individual* mutant, int crossover_bin, int
 
 	/* First permutation happens without evaluating CR */
 	int j_rand_route = rand() % vehicles_num;
-	while(mutant->routes_end[j_rand_route] == 0) {
-		if(j_rand_route < vehicles_num -1) { /* Not necessary if all routes have a customer */
+	while (mutant->routes_end[j_rand_route] == 0) {
+		if (j_rand_route < vehicles_num -1) { /* Not necessary if all routes have a customer */
 			j_rand_route++; 
 		} else  j_rand_route = 0;
 	}
@@ -291,7 +291,7 @@ Individual* crossover(Individual* x1, Individual* mutant, int crossover_bin, int
 	int customer_chosen = mutant->routes[j_rand_route][j_rand_component];
 	
 	/* Perturbando o individual com a cidade selecionada jrand, para garantir que o indivíduo trial seja diferente do indivíduo target_idx. */
-	if(j_rand_component >= trial->routes_end[j_rand_route]) {		
+	if (j_rand_component >= trial->routes_end[j_rand_route]) {		
 		individual_remove_customer(trial, customer_chosen, 0);
 		
 		/* Adicionando na posicao j_rand. */
@@ -307,7 +307,7 @@ Individual* crossover(Individual* x1, Individual* mutant, int crossover_bin, int
 		customer_target = trial->routes[j_rand_route][j_rand_component];	
 	
 		/* Se as customers forem iguais a perturbação não é efetuada. */
-		if(customer_chosen == customer_target) { 
+		if (customer_chosen == customer_target) { 
 			customers_closed[customer_chosen] = 1;
 		} else {
 		
@@ -326,16 +326,16 @@ Individual* crossover(Individual* x1, Individual* mutant, int crossover_bin, int
 		}
 	}
 	
-	for(i = 0; i < vehicles_num; i++){
-		for(j = 0; j < mutant->routes_end[i]; j++){
+	for (i = 0; i < vehicles_num; i++) {
+		for (j = 0; j < mutant->routes_end[i]; j++) {
 			random = (double) rand() / RAND_MAX;
 			
-			if(random <= CR) {
+			if (random <= CR) {
 				customer_chosen = mutant->routes[i][j];
 				
 				/* Se a cidade não foi fechada a perturbação será feita. */
-				if(!customers_closed[customer_chosen]){
-					if(j >= trial->routes_end[i]){
+				if (!customers_closed[customer_chosen]) {
+					if (j >= trial->routes_end[i]) {
 						/* Individual target_idx não possui cidade no mesmo indice da componente selecionada. Então a cidade será adicionada ao final daquela lista. */
 						individual_remove_customer(trial, customer_chosen, 0);
 					
@@ -352,7 +352,7 @@ Individual* crossover(Individual* x1, Individual* mutant, int crossover_bin, int
 						customer_target = trial->routes[i][j];
 						
 						/* Se as customers forem iguais a perturbação não é efetuada. */
-						if(customer_chosen == customer_target) { 
+						if (customer_chosen == customer_target) { 
 							customers_closed[customer_chosen] = 1;
 						} else {
 					
@@ -374,7 +374,7 @@ Individual* crossover(Individual* x1, Individual* mutant, int crossover_bin, int
 					}
 				}
 				
-			} else if(!crossover_bin) {
+			} else if (!crossover_bin) {
 				goto FINALIZA_CROSSOVER; 
 			}
 		}
@@ -384,14 +384,14 @@ FINALIZA_CROSSOVER:
 	return trial;
 }
 
-void differential_evolution_1(int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max, int best_solution, int mutation_rand, int crossover_bin) {
+void differential_evolution(int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max, int best_solution, int mutation_rand, int crossover_bin) {
 	Generation *generation = initial_population(distances, customers, customers_num, vehicles_num, capacity_max),
 	        *generation2 = NULL;
 	
 	FILE *file_solucao = NULL,
 	     *relatorio = NULL;
 	
-	if(PRINT_IN_FILE) {
+	if (PRINT_IN_FILE) {
 		file_solucao = fopen("solucao.vrp", "w");
 		relatorio = fopen("relatorio.ed", "w");
 		imprime_relatorio_arquivo(relatorio, generation);
@@ -407,8 +407,8 @@ void differential_evolution_1(int** distances, Customer* customers, int customer
 	do {
 		generation2 = new_generation(generation, distances, customers, customers_num, vehicles_num, capacity_max, mutation_rand, crossover_bin);
 		
-		if(best_fitness != generation2->best_solution->cost){
-			if(PRINT_IN_FILE) {
+		if (best_fitness != generation2->best_solution->cost) {
+			if (PRINT_IN_FILE) {
 				imprime_relatorio_arquivo(relatorio, generation2);
 				fprintf(relatorio, "\n");
 			} else {
@@ -425,20 +425,20 @@ void differential_evolution_1(int** distances, Customer* customers, int customer
 		
 		generation_clear_cloned_flags(generation);
 		
-		if(generation->best_solution != NULL && generation->best_solution->cost == best_solution) {
+		if (generation->best_solution != NULL && generation->best_solution->cost == best_solution) {
 			found_best_solution = 1;
 		}
 		
-	}while (!found_best_solution && generations_cnt < MAX_GEN);
+	} while (!found_best_solution && generations_cnt < MAX_GEN);
 	
 
-	if(PRINT_IN_FILE) {
-		if(generations_cnt == MAX_GEN){
+	if (PRINT_IN_FILE) {
+		if (generations_cnt == MAX_GEN) {
 			imprime_relatorio_arquivo(relatorio, generation2);
 			fprintf(relatorio, "\n");
 		}
 	
-		if(generation->best_solution != NULL) {
+		if (generation->best_solution != NULL) {
 			imprime_individual_arquivo(file_solucao, generation->best_solution, vehicles_num, customers_num);
 		} else  fprintf(file_solucao, "\nNão houve solução viável.\n");
 		
@@ -447,18 +447,18 @@ void differential_evolution_1(int** distances, Customer* customers, int customer
 		fclose(file_solucao);
 		
 	} else {
-		if(generations_cnt == MAX_GEN){
+		if (generations_cnt == MAX_GEN) {
 			imprime_relatorio_terminal(generation2);
 			printf("\n");
 		}
 	
-		if(generation->best_solution != NULL) {
+		if (generation->best_solution != NULL) {
 			imprime_individual_terminal(generation->best_solution, vehicles_num, customers_num);
 		} else  printf("\nNão houve solução viável.\n");
 	}
 
 	generation_clear_cloned_flags(generation);
-	if(generation2->best_solution->cloned){
+	if (generation2->best_solution->cloned) {
 		individual_free(generation2->best_solution, vehicles_num);
 	}
 	generation = generation_free(generation, vehicles_num);
