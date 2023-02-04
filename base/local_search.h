@@ -15,8 +15,6 @@
 void local_search(Individual* trial, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max);
 
 
-/* New local search methods */
-
 /* Best improvement version of two swap (TODO: confirm)
  */
 void two_swap(Individual* individual, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max);
@@ -26,10 +24,12 @@ void strong_drop_one_point(Individual* individual, int** distances, Customer* cu
 int drop_one_point_infeasible(Individual* individual, int** distances, Customer* customers, int vehicles_num, int customers_num, int capacity_max);
 
 
-/* Old local search methods*/
-
+/* @deprecated
+ */ 
 void swap_two_points(Individual* individual, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max);
 
+/* @deprecated
+ */ 
 void drop_one_point(Individual* individual, int** distances, Customer* customers, int vehicles_num, int customers_num, int capacity_max);
 
 /* Flip: Selecionará uma customer aleatória de cada rota e irá inserir aquela customer na melhor posição da rota que a possui.

@@ -8,58 +8,59 @@
 
 #include "../metaheuristic/differential_evolution.h"
 
-/* Determina a cidade_anterior e a cidade_posterior da customer determinada pela componente.
+/* Determina a customer_preceding e a customer_successor da customer determinada pela component.
  *
  * Variáveis:
- *   - (int)  componente, fim_rota, cidade_anterior, cidade_posterior.
+ *   - (int)  component, route_end, customer_preceding, customer_successor.
  *   - (int*) route.
  */
-#define determina_cidade_ant_e_pos(componente, route, fim_rota, cidade_anterior, cidade_posterior) \
-	if (componente == 0){ \
-		cidade_anterior = 0; \
-		cidade_posterior = route[1]; \
-	} else if (componente == fim_rota -1){ \
-		cidade_anterior = route[componente -1]; \
-		cidade_posterior = 0; \
-	} else{ \
-		cidade_anterior = route[componente -1]; \
-		cidade_posterior = route[componente +1]; \
-	}
+#define get_customer_preceding_and_successor(component, route, route_end, customer_preceding, customer_successor) \
+    if (component == 0) { \
+        customer_preceding = 0; \
+        customer_successor = route[1]; \
+    } else if (component == route_end -1) { \
+        customer_preceding = route[component -1]; \
+        customer_successor = 0; \
+    } else{ \
+        customer_preceding = route[component -1]; \
+        customer_successor = route[component +1]; \
+    }
 
 
-/* Determina a cidade_anterior e a cidade_posterior da customer determinada pela componente.
- * Mesmo código da função superior, com a diferença que se a componente estiver na ultima posição da route,
+//TODO: delete this function? 
+/* Determina a customer_preceding e a customer_successor da customer determinada pela component.
+ * Mesmo código da função superior, com a diferença que se a component estiver na ultima posição da route,
  * o fim da route é decrementado. (Usado quando é preciso remover a customer de uma route para outra).
  *
  * Variáveis:
- *   - (int)  componente, fim_rota, cidade_anterior, cidade_posterior.
+ *   - (int)  component, route_end, customer_preceding, customer_successor.
  *   - (int*) route.
  */ 
-#define determina_cidade_ant_e_pos_dec_fim(componente, route, fim_rota, cidade_anterior, cidade_posterior) \
-	if (componente == 0){ \
-		cidade_anterior = 0; \
-		cidade_posterior = route[1]; \
-	} else if (componente == fim_rota -1){ \
-		cidade_anterior = route[componente -1]; \
-		cidade_posterior = 0; \
-		fim_rota--; \
-	} else{ \
-		cidade_anterior = route[componente -1]; \
-		cidade_posterior = route[componente +1]; \
-	}
+#define get_customer_preceding_and_successor_dec_route_end(component, route, route_end, customer_preceding, customer_successor) \
+    if (component == 0) { \
+        customer_preceding = 0; \
+        customer_successor = route[1]; \
+    } else if (component == route_end -1) { \
+        customer_preceding = route[component -1]; \
+        customer_successor = 0; \
+        route_end--; \
+    } else{ \
+        customer_preceding = route[component -1]; \
+        customer_successor = route[component +1]; \
+    }
 
 
-/* Calcula o cost do indivíduo com a troca da cidade_antiga pela nova_cidade.
+/* Calcula o cost do indivíduo com a troca da customer_old pela customer_new.
  *
  * Variáveis:
- *   - (int)   cost, cidade_anterior, cidade_posterior, cidade_antiga, nova_cidade.
+ *   - (int)   cost, customer_preceding, customer_successor, customer_old, customer_new.
  *   - (int**) distances.
  */
-#define calcula_custo_troca(cost, distances, cidade_anterior, cidade_posterior, cidade_antiga, nova_cidade) \
-	cost   - distances[cidade_anterior][cidade_antiga]  \
-		- distances[cidade_antiga][cidade_posterior] \
-		+ distances[cidade_anterior][nova_cidade]    \
-		+ distances[nova_cidade][cidade_posterior]
+#define calculate_swap_cost_exclusive(cost, distances, customer_preceding, customer_successor, customer_old, customer_new) \
+    cost   - distances[customer_preceding][customer_old]  \
+        - distances[customer_old][customer_successor] \
+        + distances[customer_preceding][customer_new]    \
+        + distances[customer_new][customer_successor]
 
 
 /* Calcula o cost do indivíduo com a remoção da customer.
@@ -67,50 +68,50 @@
  * mas mesmo que neste caso o valor ainda será correto, será menos eficiente.
  *
  * Variáveis:
- *   - (int)   cost, cidade_anterior, cidade_posterior, customer.
+ *   - (int)   cost, customer_preceding, customer_successor, customer.
  *   - (int**) distances.
  */ 
-#define calcula_remocao_cidade(cost, distances, cidade_anterior, cidade_posterior, customer) \
-	cost   - distances[cidade_anterior][customer] \
-		- distances[customer][cidade_posterior] \
-		+ distances[cidade_anterior][cidade_posterior]
+#define calculate_customer_remotion(cost, distances, customer_preceding, customer_successor, customer) \
+    cost   - distances[customer_preceding][customer] \
+        - distances[customer][customer_successor] \
+        + distances[customer_preceding][customer_successor]
 
 
 /* Calcula o cost do indivíduo com adição da customer.
  * Não deve ser usado caso a route esteja vazia, pois é removido o cost da customer anterior a customer posterior.
  *
  * Variáveis:
- *   - (int)   cost, cidade_anterior, cidade_posterior, customer.
+ *   - (int)   cost, customer_preceding, customer_successor, customer.
  *   - (int**) distances.
  */
-#define calcula_adicao_cidade(cost, distances, cidade_anterior, cidade_posterior, customer) \
-	cost   + distances[cidade_anterior][customer] \
-		+ distances[customer][cidade_posterior] \
-		- distances[cidade_anterior][cidade_posterior]
+#define calculate_customer_insertion(cost, distances, customer_preceding, customer_successor, customer) \
+    cost   + distances[customer_preceding][customer] \
+        + distances[customer][customer_successor] \
+        - distances[customer_preceding][customer_successor]
 
 
 /* Calcula o cost do indivíduo com a troca da customeri pela customerj.
  */
-#define calcula_custo_com_troca_2p(routes, distances, cost_new, cost, i, j, customeri, routei, icidade_anterior, icidade_posterior, customerj, routej, jcidade_anterior, jcidade_posterior) \
-	if (i == j-1){ \
-	cost_new = cost - distances[icidade_anterior][customeri] \
-		- distances[customerj][jcidade_posterior] \
-		+ distances[customerj][icidade_anterior] \
-		+ distances[customeri][jcidade_posterior]; \
-	} else { \
-	cost_new = cost + calcula_custo_troca(0, distances, icidade_anterior, icidade_posterior, customeri, customerj) \
-		+  calcula_custo_troca(0, distances, jcidade_anterior, jcidade_posterior, customerj, customeri); \
-	}
+#define calculate_swap_cost_inclusive(routes, distances, cost_new, cost, i, j, customeri, routei, icustomer_preceding, icustomer_successor, customerj, routej, jcustomer_preceding, jcustomer_successor) \
+    if (i == j-1) { \
+    cost_new = cost - distances[icustomer_preceding][customeri] \
+        - distances[customerj][jcustomer_successor] \
+        + distances[customerj][icustomer_preceding] \
+        + distances[customeri][jcustomer_successor]; \
+    } else { \
+    cost_new = cost + calculate_swap_cost_exclusive(0, distances, icustomer_preceding, icustomer_successor, customeri, customerj) \
+        +  calculate_swap_cost_exclusive(0, distances, jcustomer_preceding, jcustomer_successor, customerj, customeri); \
+    }
 
 
 
-void local_search(Individual* trial, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacidade_max){
+void local_search(Individual* trial, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacidade_max) {
 	int it_no_improvement_cnt = 0;
 	int original_cost = trial->cost;
 	
 	do {
  		two_swap(trial, distances, customers, customers_num, vehicles_num, capacidade_max);
- 		if (original_cost > trial->cost){
+ 		if (original_cost > trial->cost) {
  			original_cost = trial->cost;
  			it_no_improvement_cnt = 0;
  		} else {
@@ -120,16 +121,16 @@ void local_search(Individual* trial, int** distances, Customer* customers, int c
  		if (it_no_improvement_cnt > 1) break;
  		
  		strong_drop_one_point(trial, distances, customers, vehicles_num, customers_num, capacidade_max);
- 		if (original_cost > trial->cost){
+ 		if (original_cost > trial->cost) {
  			original_cost = trial->cost;
  			it_no_improvement_cnt = 0;
  		} else {
  			it_no_improvement_cnt++;
  		}
 
- 		if(!trial->feasible){
+ 		if (!trial->feasible) {
  			drop_one_point_infeasible(trial, distances, customers, vehicles_num, customers_num, capacidade_max);
- 			if (trial->feasible){
+ 			if (trial->feasible) {
  				it_no_improvement_cnt = 0;
  			}
  		}
@@ -138,35 +139,33 @@ void local_search(Individual* trial, int** distances, Customer* customers, int c
  	return;
 }
 
-void two_swap(Individual* individual, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacidade_max){
+void two_swap(Individual* individual, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacidade_max) {
 	int i, j,
 	    routei, routej,
-	    carga, loadj,
+	    load, loadj,
 	    customeri, customerj,
 	    route_endi, route_endj,
-	    icidade_anterior, icidade_posterior,
-	    jcidade_anterior, jcidade_posterior;
+	    icustomer_preceding, icustomer_successor,
+	    jcustomer_preceding, jcustomer_successor;
 	 
-	int *route,
-	    *routes_end = individual->routes_end,
-	    *capacities_free = individual->capacities_free;
+	int *route;
 	
 	int cost_new,
 	    original_cost = individual->cost;
 	 
-	int houve_melhora_it;
+	int it_got_improvement;
 	    
 	for (routei = 0; routei < vehicles_num; routei++) {
 	
-		route_endi = routes_end[routei];
-		for (i = 0; i < route_endi; i++){
-REINICIA_MOV_2OPT:
+		route_endi = individual->routes_end[routei];
+		for (i = 0; i < route_endi; i++) {
+RESTART_MOVEMENT_2SWAP:
 			customeri = individual->routes[routei][i];
-			carga = customers[customeri].demand;
+			load = customers[customeri].demand;
 			
-			for (routej = routei; routej < vehicles_num; routej++){
+			for (routej = routei; routej < vehicles_num; routej++) {
 
-				route_endj = routes_end[routej];
+				route_endj = individual->routes_end[routej];
 				if (routei == routej) {
 					j = i+1;
 				} else {
@@ -179,59 +178,59 @@ REINICIA_MOV_2OPT:
 					customerj = individual->routes[routej][j];
 					loadj = customers[customerj].demand;
 			
-					if (routei != routej){
-						if((capacities_free[routei] + carga < loadj) || (capacities_free[routej] + loadj < carga)){
+					if (routei != routej) {
+						if ((individual->capacities_free[routei] + load < loadj) || (individual->capacities_free[routej] + loadj < load)) {
 							continue;
 						} else {
 							route = individual->routes[routei];
 							route[route_endi] = 0;
-							determina_cidade_ant_e_pos(i, route, route_endi, icidade_anterior, icidade_posterior); /* Macro */
+							get_customer_preceding_and_successor(i, route, route_endi, icustomer_preceding, icustomer_successor); /* Macro */
 						
 							route = individual->routes[routej];
 							route[route_endj] = 0;
-							determina_cidade_ant_e_pos(j, route, route_endj, jcidade_anterior, jcidade_posterior);
+							get_customer_preceding_and_successor(j, route, route_endj, jcustomer_preceding, jcustomer_successor);
 						
-							cost_new = original_cost + calcula_custo_troca(0, distances, icidade_anterior, icidade_posterior, customeri, customerj)
-										    + calcula_custo_troca(0, distances, jcidade_anterior, jcidade_posterior, customerj, customeri);
+							cost_new = original_cost + calculate_swap_cost_exclusive(0, distances, icustomer_preceding, icustomer_successor, customeri, customerj)
+										    + calculate_swap_cost_exclusive(0, distances, jcustomer_preceding, jcustomer_successor, customerj, customeri);
 							
-							if (cost_new < original_cost){
+							if (cost_new < original_cost) {
 								original_cost = cost_new;
-								individuo_troca_cidades(individual, customeri, carga, customerj, loadj);
+								individual_swap_customers(individual, customeri, load, customerj, loadj);
 								
-								houve_melhora_it = 1; 
+								it_got_improvement = 1; 
 							}
 						}
 					} else {
 						route = individual->routes[routei];
-						determina_cidade_ant_e_pos(i, route, route_endi, icidade_anterior, icidade_posterior); /* Macro */
+						get_customer_preceding_and_successor(i, route, route_endi, icustomer_preceding, icustomer_successor); /* Macro */
 					
 						route = individual->routes[routej];
-						determina_cidade_ant_e_pos(j, route, route_endj, jcidade_anterior, jcidade_posterior); /* Macro */
+						get_customer_preceding_and_successor(j, route, route_endj, jcustomer_preceding, jcustomer_successor); /* Macro */
 
-						calcula_custo_com_troca_2p(individual->routes, distances, cost_new, original_cost, i, j, customeri, routei, icidade_anterior, icidade_posterior, customerj, routej, jcidade_anterior, jcidade_posterior);
+						calculate_swap_cost_inclusive(individual->routes, distances, cost_new, original_cost, i, j, customeri, routei, icustomer_preceding, icustomer_successor, customerj, routej, jcustomer_preceding, jcustomer_successor);
 
-						if (cost_new < original_cost){
+						if (cost_new < original_cost) {
 							original_cost = cost_new;
-							individuo_troca_cidades(individual, customeri, 0, customerj, 0); /* Como estão na mesma route, as cargas não mudarão */
+							individual_swap_customers(individual, customeri, 0, customerj, 0); /* Como estão na mesma route, as cargas não mudarão */
 				
-							houve_melhora_it = 1;
+							it_got_improvement = 1;
 						}
 					}
 					
-					if (houve_melhora_it){
-						houve_melhora_it = 0;
-						goto REINICIA_MOV_2OPT;
+					if (it_got_improvement) {
+						it_got_improvement = 0;
+						goto RESTART_MOVEMENT_2SWAP;
 					}
 				}
 			}
 		}
 	}
 
-	if(!individual->feasible){
+	if (!individual->feasible) {
 		i = 0;
-		while (i < vehicles_num && capacities_free[i] >=0) i++;
+		while (i < vehicles_num && individual->capacities_free[i] >=0) i++;
 
-		if (i == vehicles_num){
+		if (i == vehicles_num) {
 			individual->cost = original_cost - PENALTY;
 			individual->feasible = 1;
 			return;
@@ -242,29 +241,30 @@ REINICIA_MOV_2OPT:
 	return;
 }
 
-void swap_two_points(Individual* individual, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacidade_max){
+
+/* @deprecated
+ */ 
+void swap_two_points(Individual* individual, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacidade_max) {
 	int i,
-	    carga,
+	    load,
 	    fim_rota;
 
 	int capacities_free[vehicles_num];
 
-	int **routes = individual->routes,
-	    *route,
-	    *routes_end = individual->routes_end,
+	int *route = NULL,
 	    *posicoes_rota = individual->positions[0],
 	    *posicoes_cidades = individual->positions[1];
 
 	int rota_original = 0;
 	do {
 		route = individual->routes[rota_original];
-		fim_rota = routes_end[rota_original];
+		fim_rota = individual->routes_end[rota_original];
 
-		carga = 0;
+		load = 0;
 		for (i = 0; i < fim_rota; i++)
-			carga = carga + customers[ route[i] ].demand;
+			load = load + customers[ route[i] ].demand;
 
-		capacities_free[rota_original] = capacidade_max - carga;
+		capacities_free[rota_original] = capacidade_max - load;
 		rota_original++;
 	} while (rota_original < vehicles_num);
 
@@ -291,43 +291,43 @@ void swap_two_points(Individual* individual, int** distances, Customer* customer
 			/* Obtendo a nova customer aleatória. */
 			do {
 				nova_rota = rand() % vehicles_num;
-			}while (nova_rota == rota_original || routes_end[nova_rota] == 0);
+			}while (nova_rota == rota_original || individual->routes_end[nova_rota] == 0);
 
-			nova_componente = rand() % routes_end[nova_rota];
+			nova_componente = rand() % individual->routes_end[nova_rota];
 			nova_cidade = individual->routes[nova_rota][nova_componente];
 			nova_carga = customers[nova_cidade].demand;
-			carga = customers[customer].demand;
+			load = customers[customer].demand;
 
 			/* Verifica se a troca é viável */
-			if (capacities_free[nova_rota] + nova_carga >= carga && capacities_free[rota_original] + carga >= nova_carga){
-				fim_rota = routes_end[rota_original];
+			if (capacities_free[nova_rota] + nova_carga >= load && capacities_free[rota_original] + load >= nova_carga) {
+				fim_rota = individual->routes_end[rota_original];
 
 				/* Calculando o cost da nova customer na posicao da customer antiga. */
-				if (fim_rota == 1){
-					cost_new = calcula_custo_troca(original_cost, distances, 0, 0, customer, nova_cidade); /* Macro */
+				if (fim_rota == 1) {
+					cost_new = calculate_swap_cost_exclusive(original_cost, distances, 0, 0, customer, nova_cidade); /* Macro */
 				} else {
 					route = individual->routes[rota_original];
-					determina_cidade_ant_e_pos(componente, route, fim_rota, cidade_anterior, cidade_posterior);
-					cost_new = calcula_custo_troca(original_cost, distances, cidade_anterior, cidade_posterior, customer, nova_cidade); /* Macro */
+					get_customer_preceding_and_successor(componente, route, fim_rota, cidade_anterior, cidade_posterior);
+					cost_new = calculate_swap_cost_exclusive(original_cost, distances, cidade_anterior, cidade_posterior, customer, nova_cidade); /* Macro */
 				}
 
 				/* Calculando o cost da customer antiga na posicao da nova customer. */
-				fim_rota = routes_end[nova_rota];
+				fim_rota = individual->routes_end[nova_rota];
 				route = individual->routes[nova_rota];
-				if (fim_rota == 1){
-					cost_new = calcula_custo_troca(cost_new, distances, 0, 0, nova_cidade, customer); /* Macro */
+				if (fim_rota == 1) {
+					cost_new = calculate_swap_cost_exclusive(cost_new, distances, 0, 0, nova_cidade, customer); /* Macro */
 				} else {
 					route[fim_rota] = 0; /* Apenas para modularidade, veja que é utilizado route[1] para determinação. Se a route estiver vazia o caso se torna o mesmo caso não esteja.*/
 
-					determina_cidade_ant_e_pos(nova_componente, route, fim_rota, cidade_anterior, cidade_posterior); /* Macro */
-					cost_new = calcula_custo_troca(cost_new, distances, cidade_anterior, cidade_posterior, nova_cidade, customer); /* Macro */
+					get_customer_preceding_and_successor(nova_componente, route, fim_rota, cidade_anterior, cidade_posterior); /* Macro */
+					cost_new = calculate_swap_cost_exclusive(cost_new, distances, cidade_anterior, cidade_posterior, nova_cidade, customer); /* Macro */
 				}
 
-				if (cost_new < original_cost){
-					individuo_troca_cidades(individual, customer, carga, nova_cidade, nova_carga);
+				if (cost_new < original_cost) {
+					individual_swap_customers(individual, customer, load, nova_cidade, nova_carga);
 					original_cost = cost_new;
-					capacities_free[nova_rota] = capacities_free[nova_rota] + nova_carga - carga;
-					capacities_free[rota_original] = capacities_free[rota_original] + carga - nova_carga;
+					capacities_free[nova_rota] = capacities_free[nova_rota] + nova_carga - load;
+					capacities_free[rota_original] = capacities_free[rota_original] + load - nova_carga;
 
 					houve_melhora = 1;
 				}
@@ -336,17 +336,17 @@ void swap_two_points(Individual* individual, int** distances, Customer* customer
 			customer++;
 		}while (customer < customers_num);
 
-		if (houve_melhora){
+		if (houve_melhora) {
 			it_sem_melhora = 0;
 		} else  it_sem_melhora++;
 
 	}while (it_sem_melhora < IT_SEM_MELHORA_STP);
 
-	if(!individual->feasible){
+	if (!individual->feasible) {
 		i = 0;
 		while (i < vehicles_num && capacities_free[i] >=0) i++;
 
-		if (i == vehicles_num){
+		if (i == vehicles_num) {
 			individual->cost = original_cost - PENALTY;
 			individual->feasible = 1;
 			return;
@@ -362,30 +362,28 @@ void swap_two_points(Individual* individual, int** distances, Customer* customer
  * -1 se n obteve customer possivel
  * o novo valor do individual caso obteve solucao
  */
-int drop_one_point_infeasible(Individual* individual, int** distances, Customer* customers, int vehicles_num, int customers_num, int capacidade_max){	
-	int* capacities_free = individual->capacities_free;
+int drop_one_point_infeasible(Individual* individual, int** distances, Customer* customers, int vehicles_num, int customers_num, int capacidade_max) {	
 	int infeasible = 1;
 
-	/* Obtendo a route de maior carga */
+	/* Obtendo a route de maior load */
 	int i,
 	    rota_maior_carga = 0,
 	    maior_carga_disponivel = 0;
-	for (i = 0; i < vehicles_num; i++){
-		if (capacities_free[i] > maior_carga_disponivel){
-			maior_carga_disponivel = capacities_free[i];
+	for (i = 0; i < vehicles_num; i++) {
+		if (individual->capacities_free[i] > maior_carga_disponivel) {
+			maior_carga_disponivel = individual->capacities_free[i];
 			rota_maior_carga = i;
 		}
 	}
 
 	/* Identificando a route que estourou a capacidade. */
 	int rota_invalida = 0;
-	while (capacities_free[rota_invalida] >= 0) rota_invalida++;
+	while (individual->capacities_free[rota_invalida] >= 0) rota_invalida++;
 
-	int** routes = individual->routes;
 	int *route = NULL,
 	    *routes_end = individual->routes_end;
 	
-	int carga,
+	int load,
 	    customer,
 	    fim_rota,
 	    rota_selecionada,
@@ -395,7 +393,7 @@ int drop_one_point_infeasible(Individual* individual, int** distances, Customer*
 		/* Selecionando uma route inválida aleatória */
 		do {
 			rota_invalida = rand() % vehicles_num;
-		}while (capacities_free[rota_invalida] >= 0);
+		}while (individual->capacities_free[rota_invalida] >= 0);
 		
 		route = individual->routes[rota_invalida];
 		fim_rota = routes_end[rota_invalida];
@@ -408,37 +406,37 @@ int drop_one_point_infeasible(Individual* individual, int** distances, Customer*
 				return -1; /* Algoritmo chegou ao máximo de tentativas e não encontrou uma customer que pudesse ser realocada naquela route */
 		
 			customer = route[rand() % fim_rota];
-			carga = customers[customer].demand;
+			load = customers[customer].demand;
 			
 			tentativas++;
-		}while (maior_carga_disponivel < carga);
+		}while (maior_carga_disponivel < load);
 		
 		
 		/* Selecionando uma route aleatória para realocar a customer selecionada */
 		do {
 			rota_selecionada = rand() % vehicles_num;
-		}while (capacities_free[rota_selecionada] < carga);
+		}while (individual->capacities_free[rota_selecionada] < load);
 
-		reinsere_cidade_melhor_posicao_outra_rota(individual, distances, customer, carga, rota_selecionada);
+		reinsert_customer_best_position_in_another_route(individual, distances, customer, load, rota_selecionada);
 
-//		capacities_free[num_rota] -= carga;
-//		capacities_free[rota_invalida] += carga;
+//		individual->capacities_free[num_rota] -= load;
+//		individual->capacities_free[rota_invalida] += load;
 
-		//Se a route selecionada foi a route de maior carga disponivel, a maior carga disponivel será recalculada.
-		if (rota_selecionada == rota_maior_carga){
-			maior_carga_disponivel -= carga;
-			for (i = 0; i < vehicles_num; i++){
-				if (maior_carga_disponivel < capacities_free[i]){
-					maior_carga_disponivel = capacities_free[i];
+		//Se a route selecionada foi a route de maior load disponivel, a maior load disponivel será recalculada.
+		if (rota_selecionada == rota_maior_carga) {
+			maior_carga_disponivel -= load;
+			for (i = 0; i < vehicles_num; i++) {
+				if (maior_carga_disponivel < individual->capacities_free[i]) {
+					maior_carga_disponivel = individual->capacities_free[i];
 					rota_maior_carga = i;
 				}
 			}
 		}
 		
 		/* Será verificado se o individual viabilizou */
-		if (capacities_free[rota_invalida] >= 0){
-			for (i = 0; i < vehicles_num; i++){
-				if (capacities_free[i] < 0){
+		if (individual->capacities_free[rota_invalida] >= 0) {
+			for (i = 0; i < vehicles_num; i++) {
+				if (individual->capacities_free[i] < 0) {
 					break;
 				}
 			}
@@ -457,15 +455,14 @@ int drop_one_point_infeasible(Individual* individual, int** distances, Customer*
  * -1 se n obteve customer possivel
  * o novo valor do individual caso obteve solucao
  */
-void drop_one_point(Individual* individual, int** distances, Customer* customers, int vehicles_num, int customers_num, int capacidade_max){
+void drop_one_point(Individual* individual, int** distances, Customer* customers, int vehicles_num, int customers_num, int capacidade_max) {
 	int i,
 	    fim_rota,
-	    carga,
+	    load,
 	    capacidade_disponivel,
 	    rota_maior_carga = 0;
 
-	int *route = NULL,
-	    *routes_end = individual->routes_end;
+	int *route = NULL;
 
 	int capacities_free[vehicles_num],
 	    cidades_possiveis[customers_num],
@@ -476,16 +473,16 @@ void drop_one_point(Individual* individual, int** distances, Customer* customers
 
 	//Calculando a capacidade disponível de cada route.
 	do {
-		fim_rota = routes_end[num_rota];
+		fim_rota = individual->routes_end[num_rota];
 		route = individual->routes[num_rota];
 
-		carga = 0;
-		for (i = 0; i < fim_rota; i++){
-			carga = carga + customers[ route[i] ].demand;
+		load = 0;
+		for (i = 0; i < fim_rota; i++) {
+			load = load + customers[ route[i] ].demand;
 		}
 
-		capacidade_disponivel = capacidade_max - carga;
-		if (capacidade_disponivel > maior_carga_disponivel){
+		capacidade_disponivel = capacidade_max - load;
+		if (capacidade_disponivel > maior_carga_disponivel) {
 			maior_carga_disponivel = capacidade_disponivel;
 			rota_maior_carga = num_rota;
 		}
@@ -498,17 +495,17 @@ void drop_one_point(Individual* individual, int** distances, Customer* customers
 	    segunda_rota_maior_carga = 0,
 	    primeira_melhor = 1;
 
-	/* Calculando a primeira e segunda route de maior carga. */
-	for (i = 0; i < vehicles_num; i++){
-		carga = capacities_free[i];
-		if (carga > segunda_maior_carga_disponivel){
-			if (carga != maior_carga_disponivel){
-				segunda_maior_carga_disponivel = carga;
+	/* Calculando a primeira e segunda route de maior load. */
+	for (i = 0; i < vehicles_num; i++) {
+		load = capacities_free[i];
+		if (load > segunda_maior_carga_disponivel) {
+			if (load != maior_carga_disponivel) {
+				segunda_maior_carga_disponivel = load;
 				segunda_rota_maior_carga = i;
-			} else if (primeira_melhor){
+			} else if (primeira_melhor) {
 				primeira_melhor = 0;
 			} else {
-				segunda_maior_carga_disponivel = carga;
+				segunda_maior_carga_disponivel = load;
 				segunda_rota_maior_carga = i;
 			}
 		}
@@ -517,22 +514,22 @@ void drop_one_point(Individual* individual, int** distances, Customer* customers
 	int customer = 0,
 	    max_index_cidades = 0;
 
-	for (num_rota = 0; num_rota < vehicles_num; num_rota++){
-		fim_rota = routes_end[num_rota];
+	for (num_rota = 0; num_rota < vehicles_num; num_rota++) {
+		fim_rota = individual->routes_end[num_rota];
 		route = individual->routes[num_rota];
 
-		if (num_rota != rota_maior_carga){
-			for (i = 0; i < fim_rota; i++){
+		if (num_rota != rota_maior_carga) {
+			for (i = 0; i < fim_rota; i++) {
 				customer = route[i];	
-				if (maior_carga_disponivel >= customers[customer].demand){
+				if (maior_carga_disponivel >= customers[customer].demand) {
 					cidades_possiveis[max_index_cidades] = customer;
 					max_index_cidades++;
 				}
 			}
 		} else {
-			for (i = 0; i < fim_rota; i++){
+			for (i = 0; i < fim_rota; i++) {
 				customer = route[i];	
-				if (segunda_maior_carga_disponivel >= customers[customer].demand){
+				if (segunda_maior_carga_disponivel >= customers[customer].demand) {
 					cidades_possiveis[max_index_cidades] = customer;
 					max_index_cidades++;
 				}
@@ -566,11 +563,11 @@ void drop_one_point(Individual* individual, int** distances, Customer* customers
 
 		cidades_fechadas[cidade_perturbada] = 1;
 		num_rota = posicoes_rotas[cidade_perturbada];
-		carga = customers[cidade_perturbada].demand;
+		load = customers[cidade_perturbada].demand;
 
 		max_index_rotas = 0;
-		for (i = 0; i < vehicles_num; i++){
-			if (capacities_free[i] >= carga && i != num_rota){
+		for (i = 0; i < vehicles_num; i++) {
+			if (capacities_free[i] >= load && i != num_rota) {
 				rotas_selecionadas[max_index_rotas] = i;
 				max_index_rotas++;
 			}
@@ -580,35 +577,35 @@ void drop_one_point(Individual* individual, int** distances, Customer* customers
 
 		num_rota = rotas_selecionadas[rand() % max_index_rotas]; //nova route.
 		rota_selecionada = posicoes_rotas[cidade_perturbada];
-		obteve_melhora = reinsere_cidade_melhor_posicao_outra_rota_caso_melhore(individual, distances, cidade_perturbada, carga, num_rota);
+		obteve_melhora = reinsert_customer_best_position_in_another_route_if_improves(individual, distances, cidade_perturbada, load, num_rota);
 
-		if (obteve_melhora){
-			capacities_free[num_rota] -= carga;
-			capacities_free[rota_selecionada] += carga;
+		if (obteve_melhora) {
+			capacities_free[num_rota] -= load;
+			capacities_free[rota_selecionada] += load;
 
-			/* Se a route selecionada foi a route de maior carga disponivel, a maior carga disponivel será recalculada. */
-			if (num_rota == rota_maior_carga){
-				maior_carga_disponivel -= carga;
-				for (i = 0; i < vehicles_num; i++){
-					if (maior_carga_disponivel < capacities_free[i]){
+			/* Se a route selecionada foi a route de maior load disponivel, a maior load disponivel será recalculada. */
+			if (num_rota == rota_maior_carga) {
+				maior_carga_disponivel -= load;
+				for (i = 0; i < vehicles_num; i++) {
+					if (maior_carga_disponivel < capacities_free[i]) {
 						maior_carga_disponivel = capacities_free[i];
 						rota_maior_carga = i;
 					}
 				}
 			}
-			//A segunda maior carga disponivel também será recalculada caso seja necessário.
-			if (num_rota == segunda_rota_maior_carga || segunda_rota_maior_carga >= maior_carga_disponivel){
+			//A segunda maior load disponivel também será recalculada caso seja necessário.
+			if (num_rota == segunda_rota_maior_carga || segunda_rota_maior_carga >= maior_carga_disponivel) {
 				primeira_melhor = 1;
-				for (i = 0; i < vehicles_num; i++){
-					carga = capacities_free[i];
-					if (carga > segunda_maior_carga_disponivel){
-						if (carga != maior_carga_disponivel){
-							segunda_maior_carga_disponivel = carga;
+				for (i = 0; i < vehicles_num; i++) {
+					load = capacities_free[i];
+					if (load > segunda_maior_carga_disponivel) {
+						if (load != maior_carga_disponivel) {
+							segunda_maior_carga_disponivel = load;
 							segunda_rota_maior_carga = i;
-						} else if (primeira_melhor){
+						} else if (primeira_melhor) {
 							primeira_melhor = 0;
 						} else {
-							segunda_maior_carga_disponivel = carga;
+							segunda_maior_carga_disponivel = load;
 							segunda_rota_maior_carga = i;
 						}
 					}
@@ -623,18 +620,18 @@ void drop_one_point(Individual* individual, int** distances, Customer* customers
 			}while (i < max_index_cidades && customer != cidade_perturbada && customers[customer].demand <= maior_carga_disponivel);
 
 			/* Caso encontre ao menos uma customer a ser removida, os elementos da route serão deslocados. */
-			if (i < max_index_cidades){
+			if (i < max_index_cidades) {
 				index = i -1;
-				while (i < max_index_cidades){
+				while (i < max_index_cidades) {
 					customer = cidades_possiveis[i];
 
 					num_rota = posicoes_rotas[customer];
-					if (num_rota != rota_maior_carga){
-						if (customer != cidade_perturbada && customers[customer].demand <= maior_carga_disponivel){
+					if (num_rota != rota_maior_carga) {
+						if (customer != cidade_perturbada && customers[customer].demand <= maior_carga_disponivel) {
 							cidades_possiveis[index] = cidades_possiveis[i];
 							index++;
 						}
-					} else if (customer != cidade_perturbada && customers[customer].demand <= segunda_maior_carga_disponivel){
+					} else if (customer != cidade_perturbada && customers[customer].demand <= segunda_maior_carga_disponivel) {
 						cidades_possiveis[index] = cidades_possiveis[i];
 						index++;
 					}
@@ -654,7 +651,7 @@ void drop_one_point(Individual* individual, int** distances, Customer* customers
 	return;
 }
 
-void flip(Individual* individual, int** distances, Customer* customers, int vehicles_num, int customers_num){
+void flip(Individual* individual, int** distances, Customer* customers, int vehicles_num, int customers_num) {
 	int index,
 	    num_rota,
 	    fim_rota,
@@ -669,8 +666,7 @@ void flip(Individual* individual, int** distances, Customer* customers, int vehi
 	    houve_melhora_mov,
 	    original_cost = individual->cost;
 
-	int *route = NULL,
-	    *routes_end = individual->routes_end;
+	int *route = NULL;
 
 	int it_sem_melhora = 0;
 	do {
@@ -678,11 +674,11 @@ void flip(Individual* individual, int** distances, Customer* customers, int vehi
 		houve_melhora_mov = 0;
 		do {
 			obteve_melhora = 0;
-			fim_rota = routes_end[num_rota];
-			if (fim_rota < 2){
-				if (num_rota +1 < vehicles_num){
+			fim_rota = individual->routes_end[num_rota];
+			if (fim_rota < 2) {
+				if (num_rota +1 < vehicles_num) {
 					num_rota++;
-					fim_rota = routes_end[num_rota];
+					fim_rota = individual->routes_end[num_rota];
 				} else goto PROX_ITERACAO_FLIP;
 			}
 
@@ -690,14 +686,14 @@ void flip(Individual* individual, int** distances, Customer* customers, int vehi
 			componente = rand() % fim_rota;
 			customer = route[componente];
 
-			determina_cidade_ant_e_pos_dec_fim(componente, route, fim_rota, cidade_anterior, cidade_posterior); /* Macro */
-			custo_base = calcula_remocao_cidade(original_cost, distances, cidade_anterior, cidade_posterior, customer); /* Macro */
+			get_customer_preceding_and_successor_dec_route_end(componente, route, fim_rota, cidade_anterior, cidade_posterior); /* Macro */
+			custo_base = calculate_customer_remotion(original_cost, distances, cidade_anterior, cidade_posterior, customer); /* Macro */
 
-			route[ routes_end[num_rota] ] = 0;
+			route[ individual->routes_end[num_rota] ] = 0;
 			fim_rota++;
 
 			index = 0;
-			if (componente != 0){
+			if (componente != 0) {
 				cidade_anterior = 0;
 				cidade_posterior = route[0];
 			} else {
@@ -706,10 +702,10 @@ void flip(Individual* individual, int** distances, Customer* customers, int vehi
 				cidade_posterior = route[2];
 			}
 
-			while (index < fim_rota){
-				cost_new = calcula_adicao_cidade(custo_base, distances, cidade_anterior, cidade_posterior, customer); /* Macro */
+			while (index < fim_rota) {
+				cost_new = calculate_customer_insertion(custo_base, distances, cidade_anterior, cidade_posterior, customer); /* Macro */
 
-				if (cost_new < original_cost){
+				if (cost_new < original_cost) {
 					original_cost = cost_new;
 					nova_posicao = index;		
 					obteve_melhora = houve_melhora_mov = 1;
@@ -722,8 +718,8 @@ void flip(Individual* individual, int** distances, Customer* customers, int vehi
 				cidade_posterior = route[index];
 			}
 
-			if (obteve_melhora){
-				individuo_reinsere_cidade_rota(individual, customer, nova_posicao);
+			if (obteve_melhora) {
+				individual_reinsert_customer_in_route(individual, customer, nova_posicao);
 				individual->cost = original_cost;
 			}
 
@@ -731,7 +727,7 @@ void flip(Individual* individual, int** distances, Customer* customers, int vehi
 		}while (num_rota < vehicles_num);
 
 PROX_ITERACAO_FLIP:
-		if (houve_melhora_mov){
+		if (houve_melhora_mov) {
 			it_sem_melhora = 0;
 		} else  it_sem_melhora++;
 
@@ -744,31 +740,29 @@ PROX_ITERACAO_FLIP:
  *   - 0 se não houve melhora.
  *   - 1 se houve melhora.
  */
-int reinsert_customer_best_position_in_another_route_if_improves(Individual* individual, int** distances, int customer, int load, int new_route_idx){
-    int *routes_end = individual->routes_end;
-
+int reinsert_customer_best_position_in_another_route_if_improves(Individual* individual, int** distances, int customer, int load, int new_route_idx) {
     int cidade_anterior,
         cidade_posterior,
         index_rota = individual->positions[0][customer],
-        fim_rota = routes_end[index_rota];
+        fim_rota = individual->routes_end[index_rota];
 
     int* route = individual->routes[index_rota];  
     int componente = individual->positions[1][customer];
 
-    determina_cidade_ant_e_pos_dec_fim(componente, route, fim_rota, cidade_anterior, cidade_posterior); /* Macro */
+    get_customer_preceding_and_successor_dec_route_end(componente, route, fim_rota, cidade_anterior, cidade_posterior); /* Macro */
 //  printf("%d %d %d %d\n", individual->cost, cidade_anterior, cidade_posterior, customer);
-    int custo_base = calcula_remocao_cidade(individual->cost, distances, cidade_anterior, cidade_posterior, customer); /* Macro */
+    int custo_base = calculate_customer_remotion(individual->cost, distances, cidade_anterior, cidade_posterior, customer); /* Macro */
 
-    //  individuo_remove_cidade(individual, customer);
+    //  individual_remove_customer(individual, customer);
 
     int cost_new = 0;
-    if (routes_end[new_route_idx] == 0){
+    if (individual->routes_end[new_route_idx] == 0) {
         cost_new = custo_base + distances[0][customer]
                     + distances[customer][0];
 
-        if (cost_new < individual->cost){
-            individuo_remove_cidade(individual, customer, load);
-            individuo_insere_cidade(individual, customer, load, 0, new_route_idx);
+        if (cost_new < individual->cost) {
+            individual_remove_customer(individual, customer, load);
+            individual_insert_customer(individual, customer, load, 0, new_route_idx);
             individual->cost = cost_new;
             return 1;
         }
@@ -778,7 +772,7 @@ int reinsert_customer_best_position_in_another_route_if_improves(Individual* ind
     route = individual->routes[new_route_idx]; 
     cidade_anterior = 0;
     cidade_posterior = route[0];
-    fim_rota = routes_end[new_route_idx];
+    fim_rota = individual->routes_end[new_route_idx];
 
     int index = 0,
         original_cost = INT_MAX,
@@ -786,10 +780,10 @@ int reinsert_customer_best_position_in_another_route_if_improves(Individual* ind
 
     route[fim_rota] = 0;
     fim_rota++;
-    while (index < fim_rota){
-        cost_new = calcula_adicao_cidade(custo_base, distances, cidade_anterior, cidade_posterior, customer); /* Macro */
+    while (index < fim_rota) {
+        cost_new = calculate_customer_insertion(custo_base, distances, cidade_anterior, cidade_posterior, customer); /* Macro */
 
-        if (cost_new < original_cost){
+        if (cost_new < original_cost) {
             original_cost = cost_new;
             nova_posicao = index;
         }
@@ -799,33 +793,31 @@ int reinsert_customer_best_position_in_another_route_if_improves(Individual* ind
         cidade_posterior = route[index];
     }
 
-    if (original_cost < individual->cost){
-        individuo_remove_cidade(individual, customer, load);
-        individuo_insere_cidade(individual, customer, load, nova_posicao, new_route_idx);
+    if (original_cost < individual->cost) {
+        individual_remove_customer(individual, customer, load);
+        individual_insert_customer(individual, customer, load, nova_posicao, new_route_idx);
         individual->cost = original_cost;
         return 1;
     }
     return 0;
 }
 
-void reinsert_customer_best_position_in_another_route(Individual* individual, int** distances, int customer, int load, int new_route_idx){
-    int *routes_end = individual->routes_end;
-
+void reinsert_customer_best_position_in_another_route(Individual* individual, int** distances, int customer, int load, int new_route_idx) {
     int cidade_anterior,
         cidade_posterior,
         index_rota = individual->positions[0][customer],
-        fim_rota = routes_end[index_rota];
+        fim_rota = individual->routes_end[index_rota];
 
     int* route = individual->routes[index_rota];
     int componente = individual->positions[1][customer];
 
-    determina_cidade_ant_e_pos_dec_fim(componente, route, fim_rota, cidade_anterior, cidade_posterior); /* Macro */
-    int custo_base = calcula_remocao_cidade(individual->cost, distances, cidade_anterior, cidade_posterior, customer); /* Macro */
+    get_customer_preceding_and_successor_dec_route_end(componente, route, fim_rota, cidade_anterior, cidade_posterior); /* Macro */
+    int custo_base = calculate_customer_remotion(individual->cost, distances, cidade_anterior, cidade_posterior, customer); /* Macro */
 
-    individuo_remove_cidade(individual, customer, load);
+    individual_remove_customer(individual, customer, load);
 
-    if (routes_end[new_route_idx] == 0){
-        individuo_insere_cidade(individual, customer, load, 0, new_route_idx);
+    if (individual->routes_end[new_route_idx] == 0) {
+        individual_insert_customer(individual, customer, load, 0, new_route_idx);
         individual->cost = custo_base + distances[0][customer]
             + distances[customer][0];
         return;
@@ -839,15 +831,15 @@ void reinsert_customer_best_position_in_another_route(Individual* individual, in
         nova_posicao = 0,
         original_cost = INT_MAX;
 
-    fim_rota = routes_end[new_route_idx];
+    fim_rota = individual->routes_end[new_route_idx];
     route[fim_rota] = 0;
     fim_rota++;
 
     int index = 0;
-    while (index < fim_rota){
-        cost_new = calcula_adicao_cidade(custo_base, distances, cidade_anterior, cidade_posterior, customer); /* Macro */
+    while (index < fim_rota) {
+        cost_new = calculate_customer_insertion(custo_base, distances, cidade_anterior, cidade_posterior, customer); /* Macro */
 
-        if (cost_new < original_cost){
+        if (cost_new < original_cost) {
             original_cost = cost_new;
             nova_posicao = index;
         }
@@ -857,17 +849,17 @@ void reinsert_customer_best_position_in_another_route(Individual* individual, in
         cidade_posterior = route[index];
     }
 
-    individuo_insere_cidade(individual, customer, load, nova_posicao, new_route_idx);
+    individual_insert_customer(individual, customer, load, nova_posicao, new_route_idx);
     individual->cost = original_cost;
     return;
 }
 
 
-void strong_drop_one_point(Individual* individual, int** distances, Customer* customers, int vehicles_num, int customers_num, int capacidade_max){
+void strong_drop_one_point(Individual* individual, int** distances, Customer* customers, int vehicles_num, int customers_num, int capacidade_max) {
 	int rotas_possiveis[vehicles_num];
 
 	int i, k, l,
-	    carga,
+	    load,
 	    customer,
 	    fim_rota,
 	    num_rota,
@@ -876,30 +868,27 @@ void strong_drop_one_point(Individual* individual, int** distances, Customer* cu
 	int obteve_melhora = 0,
 	    carga_anterior = -1;
 	
-	int* route;
-	int *routes_end = individual->routes_end,
-	    *capacities_free = individual->capacities_free;
+	int* route = NULL;
 	
 	int index = 0;
-	int** routes = individual->routes;
 	for (num_rota = 0; num_rota < vehicles_num; num_rota++) {
 	
 		route = individual->routes[num_rota];
-		fim_rota = routes_end[num_rota];
+		fim_rota = individual->routes_end[num_rota];
 		carga_anterior = -1;
 		
 		/*Se a route só possui uma customer, esta customer será mantida */
-		if (fim_rota > 1){ 
-			for (i = 0; i < fim_rota; i++){
+		if (fim_rota > 1) { 
+			for (i = 0; i < fim_rota; i++) {
 				customer = route[i];
-				carga = customers[customer].demand;
+				load = customers[customer].demand;
 				
-				/* Se a carga atual é maior que a carga anterior ou houve melhora, é necessário recalcular as routes possiveis */
-				if (carga > carga_anterior || obteve_melhora){
+				/* Se a load atual é maior que a load anterior ou houve melhora, é necessário recalcular as routes possiveis */
+				if (load > carga_anterior || obteve_melhora) {
 					//Seleciona as routes possiveis, diferentes da route atual, para efetuar o movimento.
 					index = 0;
-					for (k = 0; k < vehicles_num; k++){
-						if (k != num_rota && carga <= capacities_free[k]){
+					for (k = 0; k < vehicles_num; k++) {
+						if (k != num_rota && load <= individual->capacities_free[k]) {
 							rotas_possiveis[index] = k;
 							index++;
 						}
@@ -907,27 +896,29 @@ void strong_drop_one_point(Individual* individual, int** distances, Customer* cu
 				}
 				
 				obteve_melhora = 0;
-				for (l = 0; l < index; l++){
+				for (l = 0; l < index; l++) {
 					rota_selecionada = rotas_possiveis[l];
-					if(!obteve_melhora){
-						obteve_melhora = reinsere_cidade_melhor_posicao_outra_rota_caso_melhore(individual, distances, customer, carga, rota_selecionada);
-					} else  reinsere_cidade_melhor_posicao_outra_rota_caso_melhore(individual, distances, customer, carga, rota_selecionada);
+					if (!obteve_melhora) {
+						obteve_melhora = reinsert_customer_best_position_in_another_route_if_improves(individual, distances, customer, load, rota_selecionada);
+					} else {
+						reinsert_customer_best_position_in_another_route_if_improves(individual, distances, customer, load, rota_selecionada);
+					}
 				}
 					
 				/* Com a melhora, o tamanho das routes modificaram */
 				if (obteve_melhora)
-					fim_rota = routes_end[num_rota];
+					fim_rota = individual->routes_end[num_rota];
 				
-				carga_anterior = carga;
+				carga_anterior = load;
 			}
 		}
 	}
 
-	if(!individual->feasible){
+	if (!individual->feasible) {
 		i = 0;
-		while (i < vehicles_num && capacities_free[i] >=0) i++;
+		while (i < vehicles_num && individual->capacities_free[i] >=0) i++;
 
-		if (i == vehicles_num){
+		if (i == vehicles_num) {
 			individual->cost -= PENALTY;
 			individual->feasible = 1;
 		}
