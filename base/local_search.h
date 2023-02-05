@@ -3,50 +3,50 @@
 
 #include "dependences.h"
 
-/* Uma iteração do Swap two points ou Flip, referem-se ao movimento completo, já uma iteração do drop one points refere-se 
- * a troca de uma customer.
+/* Local search 
+ * - One iteration consists by running the following methods sequentially
+ *   2-Swap -> Strong drop one point -> [If solution is infeasible] Drop one point infeasible 
+ *   If the iteration gets an improvement, then another iteration is executed.
  */
-
-#define IT_SEM_MELHORA_STP 50
-#define IT_SEM_MELHORA_DOP 50
-#define IT_SEM_MELHORA_FLIP 50
-
-
 void local_search(Individual* trial, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max);
 
 
-/* Best improvement version of two swap (TODO: confirm)
+/* Two swap 
+ * - classical heuristic
  */
 void two_swap(Individual* individual, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max);
 
+
+/* Strong drop one point
+ * - proposed method
+ */
 void strong_drop_one_point(Individual* individual, int** distances, Customer* customers, int vehicles_num, int customers_num, int capacity_max);
 
+
+/* Drop one point infeasible
+ * - proposed method
+ *
+ * @return:
+ * - 1: if it turned the individual feasible
+ * - 0: otherwise
+ */
 int drop_one_point_infeasible(Individual* individual, int** distances, Customer* customers, int vehicles_num, int customers_num, int capacity_max);
 
 
-/* @deprecated
- */ 
-void swap_two_points(Individual* individual, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max);
-
-/* @deprecated
- */ 
-void drop_one_point(Individual* individual, int** distances, Customer* customers, int vehicles_num, int customers_num, int capacity_max);
-
-/* Flip: Selecionará uma customer aleatória de cada rota e irá inserir aquela customer na melhor posição da rota que a possui.
- *
- * Retorno: 
- *   - 0 caso não haja melhora.
- *   - O novo custo do indivíduo, caso tenha obtido melhora.
+/* Reinsert customer best position in another route
+ * - A "customer" is removed from the individual and reinserted in the best position of route "new_route_idx". 
  */
-void flip(Individual* individual, int** distances, Customer* customers, int vehicles_num, int customers_num);
-
-
 void reinsert_customer_best_position_in_another_route(Individual* individual, int** distances, int customer, int load, int new_route_idx);
 
-/* Retorno:
- *   - 0 se não houve melhora.
- *   - 1 se houve melhora. 
+
+/* Reinsert customer best position in another route
+ * - A "customer" is removed from the individual and reinserted in the best position of route "new_route_idx" if an improvement can be obtained
+ *
+ * @ return:
+ * - 1: an enhancement was obtained
+ * - 0: otherwise
  */
 int reinsert_customer_best_position_in_another_route_if_improves(Individual* individual, int** distances, int customer, int load, int new_route_idx);
+
 
 #endif /* LOCALSEARCH_H */
