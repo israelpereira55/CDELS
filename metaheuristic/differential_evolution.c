@@ -6,7 +6,7 @@
 
 #include "../base/local_search.h"
 #include "../base/dependences.h"
-#include "../base/file_tools.h"
+#include "../base/io_tools.h"
 
 #include "../metaheuristic/differential_evolution.h"
 
@@ -82,10 +82,40 @@ void generation_clear_cloned_flags(Generation* generation) {
     }
 }
 
-Generation* new_generation(Generation* generation, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max, int mutation_rand, int crossover_bin) {
+Generation* new_generation(Generation* generation, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max, enum DETechnique de_technique ) {
     Individual  *mutant = NULL,
                 *trial = NULL,
                 *target = NULL;
+
+    enum CrossoverType crossover_type;
+    enum MutationType mutation_type;
+
+    switch (de_technique) {
+        case RAND_1_BIN:
+            mutation_type = MUTATION_RAND;
+            crossover_type = CROSSOVER_BIN;
+            break;
+
+        case RAND_1_EXP:
+            mutation_type = MUTATION_RAND;
+            crossover_type = CROSSOVER_EXP;
+            break;
+
+        case BEST_1_BIN:
+            mutation_type = MUTATION_BEST;
+            crossover_type = CROSSOVER_BIN;
+            break;
+
+        case BEST_1_EXP:
+            mutation_type = MUTATION_BEST;
+            crossover_type = CROSSOVER_EXP;
+            break;
+
+        //TODO: print error?
+        default:
+            mutation_type = MUTATION_RAND;
+            crossover_type = CROSSOVER_BIN;
+    }
     
     Generation* generation2 = generation_init();
     generation2->best_solution = generation->best_solution;
@@ -94,17 +124,17 @@ Generation* new_generation(Generation* generation, int** distances, Customer* cu
         generation2->best_solution->cloned = 1;
 
     int generation2_has_best_solution_generation1 = 0;
-    
+
     int target_idx = 0;
     while (target_idx < NP) {
-        mutant = mutation(generation, target_idx, customers, customers_num, vehicles_num, mutation_rand);
+        mutant = mutation(generation, target_idx, customers_num, vehicles_num, mutation_type);
         target = generation->individuals[target_idx];
-        trial = crossover(target, mutant, crossover_bin, customers_num, vehicles_num);
+        trial = crossover(target, mutant, customers_num, vehicles_num, crossover_type);
         
         mutant = individual_free(mutant, vehicles_num);
         individual_reevaluate(trial, capacity_max, vehicles_num, distances, customers);
 
-        local_search(trial, distances, customers, customers_num, vehicles_num, capacity_max);
+        local_search(trial, distances, customers, vehicles_num);
         
         if (trial->cost < target->cost) {
             if (trial->feasible) {
@@ -236,31 +266,30 @@ Individual* generate_new_mutant(Individual* x1, Individual* x2, Individual* x3, 
 }
 
 // TODO: use enum
-/* mutation_type = 0 o individual target_idx é a melhor solucao da populacao.
+/* mutation_type = 0 o individual target_idx é a melhor solution da populacao.
  * mutation_type = 1 o individual target_idx é aleatório.
  */
-Individual* mutation(Generation* generation, int target_idx, Customer* customers, int customers_num, int vehicles_num, int mutation_type) {
+Individual* mutation(Generation* generation, int target_idx, int customers_num, int vehicles_num, enum MutationType mutation_type) {
     int r1 = rand() % NP;
     int r2 = rand() % NP;
     int r3 = rand() % NP;
 
-    while (r2 == target_idx) 
-        r2 = rand() % NP;
+    while (r2 == target_idx) r2 = rand() % NP;
     
-    while (r3 == target_idx || r3 == r2) 
-        r3 = rand() % NP;
+    while (r3 == target_idx || r3 == r2) r3 = rand() % NP;
 
-    if (mutation_type == 0 && generation->best_solution != NULL)
+    if (mutation_type == MUTATION_BEST && generation->best_solution != NULL) {
         return generate_new_mutant(generation->best_solution, generation->individuals[r2], generation->individuals[r3], vehicles_num, customers_num);
+    }
     
-    while (r1 == target_idx || r1 == r2 || r1 == r3) 
-        r1 = rand() % NP;
-    
+
+    while (r1 == target_idx || r1 == r2 || r1 == r3) r1 = rand() % NP;
+
     return generate_new_mutant(generation->individuals[r1], generation->individuals[r2], generation->individuals[r3], vehicles_num, customers_num);
 }
 
 /* A cidade perturbada é a cidade da posicao antiga do individual, que será substituida pela cidade mutant. */
-Individual* crossover(Individual* x1, Individual* mutant, int crossover_bin, int customers_num, int vehicles_num) {
+Individual* crossover(Individual* x1, Individual* mutant, int customers_num, int vehicles_num, enum CrossoverType crossover_type) {
     double random = 0.;
     
     int i = 0, j = 0,
@@ -276,7 +305,9 @@ Individual* crossover(Individual* x1, Individual* mutant, int crossover_bin, int
     while (mutant->routes_end[j_rand_route] == 0) {
         if (j_rand_route < vehicles_num -1) { /* Not necessary if all routes have a customer */
             j_rand_route++; 
-        } else  j_rand_route = 0;
+        } else {
+            j_rand_route = 0;
+        }
     }
     int j_rand_component = rand() % mutant->routes_end[j_rand_route];
     
@@ -374,17 +405,17 @@ Individual* crossover(Individual* x1, Individual* mutant, int crossover_bin, int
                     }
                 }
                 
-            } else if (!crossover_bin) {
-                goto FINALIZA_CROSSOVER; 
+            } else if (crossover_type == CROSSOVER_EXP) {
+                goto END_CROSSOVER; 
             }
         }
     }
 
-FINALIZA_CROSSOVER:
+END_CROSSOVER:
     return trial;
 }
 
-void differential_evolution(int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max, int best_solution, int mutation_rand, int crossover_bin) {
+void differential_evolution(int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max, int best_solution, enum DETechnique de_technique) {
     Generation *generation = initial_population(distances, customers, customers_num, vehicles_num, capacity_max),
             *generation2 = NULL;
     
@@ -392,7 +423,7 @@ void differential_evolution(int** distances, Customer* customers, int customers_
          *file_report = NULL;
     
     if (PRINT_IN_FILE) {
-        file_solution = fopen("solucao.vrp", "w");
+        file_solution = fopen("solution.txt", "w");
         file_report = fopen("report.txt", "w");
         generation_print_report_in_file(file_report, generation);
         fprintf(file_report, "\n");
@@ -405,7 +436,7 @@ void differential_evolution(int** distances, Customer* customers, int customers_
         found_best_solution = 0,
         best_fitness = generation->best_solution->cost;
     do {
-        generation2 = new_generation(generation, distances, customers, customers_num, vehicles_num, capacity_max, mutation_rand, crossover_bin);
+        generation2 = new_generation(generation, distances, customers, customers_num, vehicles_num, capacity_max, de_technique);
         
         if (best_fitness != generation2->best_solution->cost) {
             if (PRINT_IN_FILE) {
@@ -439,10 +470,12 @@ void differential_evolution(int** distances, Customer* customers, int customers_
         }
     
         if (generation->best_solution != NULL) {
-            individual_print_in_file(file_solution, generation->best_solution, vehicles_num, customers_num);
-        } else  fprintf(file_solution, "\nNão houve solução viável.\n");
+            individual_print_in_file(file_solution, generation->best_solution, vehicles_num);
+        } else {
+            fprintf(file_solution, "\nDid not find a feasible solution.\n");
+        }
         
-        printf("    Verifique o arquivo solucao.vrp no disco.\n");
+        printf("    File solution.txt was write on disk.\n");
         fclose(file_report);
         fclose(file_solution);
         
@@ -453,8 +486,10 @@ void differential_evolution(int** distances, Customer* customers, int customers_
         }
     
         if (generation->best_solution != NULL) {
-            individual_print(generation->best_solution, vehicles_num, customers_num);
-        } else  printf("\nNão houve solução viável.\n");
+            individual_print(generation->best_solution, vehicles_num);
+        } else {
+            printf("\nDid not find a feasible solution.\n");
+        }
     }
 
     generation_clear_cloned_flags(generation);
