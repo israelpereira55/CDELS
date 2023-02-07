@@ -5,30 +5,54 @@
 #include "../metaheuristic/differential_evolution.h"
 
 
-int escolha_tecnica() {
-    int escolha = 0;
-
+//TODO: update all io strategy to arguments...
+enum DETechnique terminal_choose_de_technique() {
+    int chosen_id = 0;
+    
     do {
         printf( "=================================================================== \n"
             "           CDELS for CVRP\n"
             "===================================================================\n\n"
         
-        "Escolha a técnica:\n" 
+        "Choose the DE technique:\n" 
         "    1 - DE/rand/1/bin\n" 
         "    2 - DE/rand/1/exp\n" 
         "    3 - DE/best/1/bin\n" 
         "    4 - DE/best/1/exp\n" 
-        "    Técnica: ");
+        "    Technique: ");
     
-        scanf("%d", &escolha);
-        if (escolha < 1 || escolha > 4) {
-            printf("    Escolha inválida!\n\n");
-            escolha = -1;
+        scanf("%d", &chosen_id);
+        if (chosen_id < 1 || chosen_id > 4) {
+            printf("    Wrong option!\n\n");
+            chosen_id = -1;
         }
-    } while (escolha == -1);
-    
+    } while (chosen_id == -1);
     printf("\n");
-    return escolha;
+    
+    enum DETechnique de_technique = 0;
+    switch (chosen_id){
+        case 1:
+            de_technique = RAND_1_BIN;
+            break;
+
+        case 2:
+            de_technique = RAND_1_EXP;
+            break;
+
+        case 3:
+            de_technique = BEST_1_BIN;
+            break;
+
+        case 4:
+            de_technique = BEST_1_EXP;
+            break;
+
+
+        default:
+            de_technique = RAND_1_BIN;
+    }
+
+    return de_technique;
 }
 
 void file_update_customer_demand(Customer* customers, FILE* file, int customers_num) {
@@ -70,20 +94,20 @@ void file_customers_init(Customer* customers, FILE* file, int customers_num) {
     return;
 }
 
-void individual_print(Individual* individual, int vehicles_num, int customers_num) {
+void individual_print(Individual* individual, int vehicles_num) {
 
     if (individual->feasible) {
-        printf("Individual feasible\n");
-    } else  printf("Individual inviavel\n");
+        printf("Individual is feasible\n");
+    } else  printf("Individual is infeasible\n");
     
-    printf("Custo: %d\n\n", individual->cost);
+    printf("Cost: %d\n\n", individual->cost);
     
     int *route = NULL,
           route_end;
     
     int i, j;
     for (i = 0; i < vehicles_num; i++) {
-        printf("Veiculo #%d: ", i+1);
+        printf("Vehicle #%d: ", i+1);
         route_end = individual->routes_end[i];
         route = individual->routes[i];
         
@@ -95,20 +119,20 @@ void individual_print(Individual* individual, int vehicles_num, int customers_nu
     return;
 }
 
-void individual_print_in_file(FILE* file, Individual* individual, int vehicles_num, int customers_num) {
+void individual_print_in_file(FILE* file, Individual* individual, int vehicles_num) {
 
     if (individual->feasible) {
-        fprintf(file, "Individual feasible\n");
-    } else  fprintf(file, "Individual inviavel\n");
+        fprintf(file, "Individual is feasible\n");
+    } else  fprintf(file, "Individual is infeasible\n");
     
-    fprintf(file, "Custo: %d\n\n", individual->cost);
+    fprintf(file, "Cost: %d\n\n", individual->cost);
     
     int *route = NULL,
          route_end;
 
     int i, j;         
     for (i = 0; i < vehicles_num; i++) {
-        fprintf(file, "Veiculo #%d: ", i+1);
+        fprintf(file, "Vehicle #%d: ", i+1);
         route_end = individual->routes_end[i];
         route = individual->routes[i];
         
@@ -121,38 +145,40 @@ void individual_print_in_file(FILE* file, Individual* individual, int vehicles_n
 }
 
 void generation_print_report(Generation* generation) {
-    printf("Geração: %d\n", generation->id);
+    printf("Generation: %d\n", generation->id);
 
     if (generation->best_solution != NULL) {
-        printf("Melhor solução viável: %d\n", generation->best_solution->cost);
-    } else  printf("Melhor solução viável: VAZIO\n");
+        printf("Best feasible solution: %d\n", generation->best_solution->cost);
+    } else  printf("Best feasible solution: VAZIO\n");
     
-    printf("Número de soluções viáveis: %d.\n", generation->feasible_solutions_num);
+    printf("Number of feasible solutions: %d.\n", generation->feasible_solutions_num);
     return;
 }
 
 void generation_print_report_in_file(FILE* file, Generation* generation) {
-    fprintf(file, "Geração: %d\n", generation->id);
+    fprintf(file, "Generation: %d\n", generation->id);
 
     if (generation->best_solution != NULL) {
-        fprintf(file, "Melhor solução viável: %d\n", generation->best_solution->cost);
-    } else  fprintf(file, "Melhor solução viável: VAZIO\n");
+        fprintf(file, "Best feasible solution: %d\n", generation->best_solution->cost);
+    } else  fprintf(file, "Best feasible solution: VAZIO\n");
     
-    fprintf(file, "Número de soluções viáveis: %d.\n", generation->feasible_solutions_num);
+    fprintf(file, "Number of feasible solutions: %d.\n", generation->feasible_solutions_num);
     return;
 }
 
-void individual_test(Individual* individual, Customer* customers, int customers_num, int vehicles_num) {
-    individual_print(individual, vehicles_num, customers_num);
+
+//TODO: check all
+void terminal_individual_test(Individual* individual, Customer* customers, int customers_num, int vehicles_num) {
+    individual_print(individual, vehicles_num);
     printf("\n");
         
-    int cidades_visitadas[customers_num];
+    int customers_visited[customers_num];
     
-    printf("Indices: ");
+    printf("Indexes: ");
     
     int i = 1;
     while (i < customers_num +1) {
-        cidades_visitadas[i] = 0;
+        customers_visited[i] = 0;
         i++;
         
         printf("%d ", (i-2)%10 );
@@ -161,12 +187,12 @@ void individual_test(Individual* individual, Customer* customers, int customers_
     printf("\n\n");
     
     int j = 0;
-    printf("Rotas:   ");
+    printf("Routes:   ");
     for (i = 0; i < customers_num; i++) {
             printf("%d ", individual->positions[0][i]);
     } 
     
-    printf("\nCidades: ");
+    printf("\nCustomers: ");
     for (i = 0; i < customers_num; i++) {
         printf("%d ", individual->positions[1][i]);
     } 
@@ -174,7 +200,7 @@ void individual_test(Individual* individual, Customer* customers, int customers_
     printf("\n\n");
     
     for (i = 0; i < vehicles_num; i++) {
-        printf("FIM DA ROTA %d: %d\n", i+1, individual->routes_end[i]);
+        printf("End of route %d: %d\n", i+1, individual->routes_end[i]);
     }
     
     printf("\n");
@@ -185,43 +211,43 @@ void individual_test(Individual* individual, Customer* customers, int customers_
         for (j = 0; j < individual->routes_end[i]; j++)
             load += customers[individual->routes[i][j]].demand;
             
-        printf("CARGA DA ROTA %d: %d\n", i, load);
+        printf("Route load %d: %d\n", i, load);
     }
     
     
     for (i = 0; i < vehicles_num; i++) {
         for (j = 0; j < individual->routes_end[i]; j++) {
-            cidades_visitadas[ individual->routes[i][j] ]++;
+            customers_visited[ individual->routes[i][j] ]++;
         }
     }
     
     int count = 0;
     for (i = 1; i < customers_num; i++) {
-        if ( !cidades_visitadas[i]) {
-            printf("A CIDADE %d ESTA FALTANDO.\n", i+1);
+        if ( !customers_visited[i]) {
+            printf("[ERROR]: Customer %d is missing.\n", i+1);
         }
         
-        if (cidades_visitadas[i] > 1) {
-            printf("COPIA DA CIDADE %d, %d vzs\n", i+1, cidades_visitadas[i]);
+        if (customers_visited[i] > 1) {
+            printf("[ERROR]: Copy of customer %d, %d times\n", i+1, customers_visited[i]);
             
         }
         
-        if (cidades_visitadas[i]) {
+        if (customers_visited[i]) {
             count++;
         }
     }
     
-    printf("QUANTIDADE DE CIDADES %d\n\n", count);
+    printf("Number of customers %d\n\n", count);
     
     for (i = 0; i < vehicles_num; i++) {    
         if (individual->routes_end[i] == 0) {
-            printf("A ROTA %d ESTA VAZIA!\n", i);
+            printf("[ERROR]: Route %d is empty!\n", i);
         }
     }
     
     for (i = 1; i < customers_num; i++) {
         if ( individual->routes[ individual->positions[0][i] ][ individual->positions[1][i] ] != i) {
-                printf("POSICAO DA CIDADE %d ERRADA!\n", i+1);
+                printf("[ERROR]: Position of customer %d is wrong!\n", i+1);
         }
     } 
     
