@@ -105,12 +105,12 @@
 
 
 
-void local_search(Individual* trial, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacidade_max) {
+void local_search(Individual* trial, int** distances, Customer* customers, int vehicles_num) {
     int it_no_improvement_cnt = 0;
     int original_cost = trial->cost;
     
     do {
-        two_swap(trial, distances, customers, customers_num, vehicles_num, capacidade_max);
+        two_swap(trial, distances, customers, vehicles_num);
         if (original_cost > trial->cost) {
             original_cost = trial->cost;
             it_no_improvement_cnt = 0;
@@ -120,7 +120,7 @@ void local_search(Individual* trial, int** distances, Customer* customers, int c
 
         if (it_no_improvement_cnt > 1) break;
         
-        strong_drop_one_point(trial, distances, customers, vehicles_num, customers_num, capacidade_max);
+        strong_drop_one_point(trial, distances, customers, vehicles_num);
         if (original_cost > trial->cost) {
             original_cost = trial->cost;
             it_no_improvement_cnt = 0;
@@ -129,7 +129,7 @@ void local_search(Individual* trial, int** distances, Customer* customers, int c
         }
 
         if (!trial->feasible) {
-            drop_one_point_infeasible(trial, distances, customers, vehicles_num, customers_num, capacidade_max);
+            drop_one_point_infeasible(trial, distances, customers, vehicles_num);
             if (trial->feasible) {
                 it_no_improvement_cnt = 0;
             }
@@ -140,7 +140,7 @@ void local_search(Individual* trial, int** distances, Customer* customers, int c
 }
 
 
-void two_swap(Individual* individual, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacidade_max) {
+void two_swap(Individual* individual, int** distances, Customer* customers, int vehicles_num) {
     int i = 0, 
         j = 0,
         routei = 0,
@@ -252,7 +252,7 @@ RESTART_MOVEMENT_2SWAP:
 }
 
 
-int drop_one_point_infeasible(Individual* individual, int** distances, Customer* customers, int vehicles_num, int customers_num, int capacidade_max) {  
+int drop_one_point_infeasible(Individual* individual, int** distances, Customer* customers, int vehicles_num) {  
     int infeasible = 1;
 
     /* Obtaining route with highest load */
@@ -455,7 +455,7 @@ void reinsert_customer_best_position_in_another_route(Individual* individual, in
 }
 
 
-void strong_drop_one_point(Individual* individual, int** distances, Customer* customers, int vehicles_num, int customers_num, int capacidade_max) {
+void strong_drop_one_point(Individual* individual, int** distances, Customer* customers, int vehicles_num) {
     int rotas_possiveis[vehicles_num];
 
     int i = 0, 
