@@ -52,10 +52,9 @@ I love the Differential Evolution metaheuristic. So, we have proposed a combinat
 
 In the literature, there are several DE adaptations for combinatorial problems. Teoh et al. [2] have done a great article using DE for CVRP, which uses an easy-to-code adaptation for DE proposed by (Mingyong,  L.  and  Erbao,  C), which ranks the real numbers and assigns integers considering the ranks of the numbers, where a lower number are assigned to lower integers. It's not only easy to code but also gives good results. We have proposed an algorithm based in DE with an adaptation for mutation and crossover DE mechanisms. This adaptation uses the position of the clients in chromosomes which presented a better result than arithmetically updating their values. The complete algorithm is explained detailed in our article [1].
 
-I'm publishing the code to make it easier to reproduce. Sadly,  it's not a common practice for papers in the optimization area, but we can change that! ;)
+I'm publishing the code to make it easier to reproduce. Sadly, it's not a common practice for papers in the optimization area, but we can change that! ;)
 
-The CDELS stands for Combinatorial Differential Evolution with Local Search. CDELS is coded in C language. I didn't code it thinking to share the code, so it's not coded in English, sorry... 
-I have plans to rewrite this code (maybe on C++) to make it more user-friendly and reader-friendly (in English as well!) and also improve the interfaces for parameter decisions but untill that I will explain how you can use this version.
+The CDELS stands for Combinatorial Differential Evolution with Local Search. CDELS is coded in C language.
  
 
 
@@ -64,16 +63,15 @@ I have plans to rewrite this code (maybe on C++) to make it more user-friendly a
 ## Getting Started
 
 First, you need a CVRP problem instance, which you can get on VRP Libraries.
-We will list some libraries in which you can get them. We also have the "instances" folder with some CVRPLIB instances, mostly for backup purposes which are already processed but you can use them too.
+We will list some libraries in which you can get them. We also have the "instances" folder with some CVRPLIB instances, mostly for backup purposes but you can use them too.
 
 You can make your own instance. It just needs to follow TSPLIB95 standards. 
 
 * [CVRPLIB](http://vrp.atd-lab.inf.puc-rio.br/)
 
 
-You need to clean the header of the instance before using it on CDELS.
-The first line should have four integers. The number of vehicles, optimum value of the instance, number of clients
-and vehicle capacity. If you don't know the optimum value just put a low value which should be
+The customers should be given in 2d dimensions. In this CDELS version, instances using distance matrix are not supported.
+If you are creating your instance and don't know the optimum value just write a low value which should be
 bellow the lower bound (just write a small integer! ;) ).
 
 **Important:** We are using the TSPLIB95 standard that rounds to the nearest integer the operation cost with floating numbers. If you don't want that, modify the distance matrix creating function.
@@ -95,7 +93,7 @@ gcc and make.
     * [differential_evolution.c](https://github.com/israelpereira55/CDELS/blob/master/metaheuristic/differential_evolution.c)
 
 
-      To choose a fixed value for the NP parameter, remove the NP definition in the main file.
+      To choose the NP parameter.
 
 2. Run the project
    ```sh
@@ -119,8 +117,6 @@ Using very large instances (250+ customers) we noticed in rare cases that the fi
 All solutions presented in the article were validated to ensure that they were feasible and had the exact solution cost as reported.
 
 If you find an execution with unexpected results, please report presenting the instance file and the seed to reproduce the problem.
-
-For future, I have plans to reimplement this software for a more user-friendly experience.
 
 
 <!-- CONTACT -->
