@@ -3,10 +3,10 @@
 
 #include "../common/dependences.h"
 
-#define F 0.1
-#define CR 0.9
+#define F 0.7
+#define CR 0.7
 //#define NP 250
-#define MAX_GEN 200000
+#define MAX_GEN 5000
 #define PENALTY 100.0
 
 #define PRINT_IN_FILE 0

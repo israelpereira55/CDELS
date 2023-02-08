@@ -59,15 +59,54 @@ enum DETechnique terminal_choose_de_technique() {
 }
 
 
-/* WIP */
-void file_read_instance(File* file, Customers* customers, Header* header){
+void file_read_header(FILE* file, Header* header){
+    char line[100];
 
-    if (4 != fscanf(file_read, "%d %d %d %d", &(header->vehicles_num), &(header.best_solution), &(header.customers_num), &(header.capacity_max))) {
-        printf("[ERROR]: IO error.\n"); 
+    /* Using instance A-n32-k5 as example in comments */
+    
+    if (fgets(line, 100, file) == NULL) { /* NAME : A-n32-k5 */
+        printf("[ERROR]: Bad instance.\n"); 
+        exit(1); 
+    } 
+
+
+    if (fgets(line, 100, file) == NULL) { /* COMMENT : (Augerat et al, No of trucks: 5, Optimal value: 784) */
+        printf("[ERROR]: Bad instance.\n"); 
+        exit(1); 
+    } 
+    sscanf(line, "%*[^:]: %*[^:]: %d%*[^:]: %d", &(header->vehicles_num), &(header->best_solution_value));
+
+
+    if (fgets(line, 100, file) == NULL) { /* TYPE : CVRP */
+        printf("[ERROR]: Bad instance.\n"); 
+        exit(1); 
+    } 
+
+
+    if (fgets(line, 100, file) == NULL) { /* DIMENSION : 32 */
+        printf("[ERROR]: Bad instance.\n"); 
+        exit(1); 
+    } 
+    sscanf(line, "%*[^:]: %d", &(header->customers_num));
+
+
+    if (fgets(line, 100, file) == NULL) { /* EDGE_WEIGHT_TYPE : EUC_2D */
+        printf("[ERROR]: Bad instance.\n"); 
+        exit(1); 
+    } 
+
+    if (fgets(line, 100, file) == NULL) {  /* CAPACITY : 100 */
+        printf("[ERROR]: Bad instance.\n"); 
         exit(1); 
     }
+    sscanf(line, "%*[^:]: %d", &(header->capacity_max));
 
-    file_customers_init(customers, file_read, customers_num);
+    if (fgets(line, 100, file) == NULL) { /* NODE_COORD_SECTION  */
+        printf("[ERROR]: Bad instance.\n"); 
+        exit(1); 
+    } 
+
+    return;
 }
 
 

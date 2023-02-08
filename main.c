@@ -35,24 +35,23 @@ int main() {
         printf("File %s was not found.\nAborting...\n", filename);
         exit(1);
     }
+
+    Header header;
+    file_read_header(file_read, &header);
+    //printf("%d %d %d %d\n", header.vehicles_num, header.best_solution_value, header.customers_num, header.capacity_max);
     
-    if (fscanf(file_read, "%d %d %d %d", &vehicles_num, &best_solution, &customers_num, &capacity_max) != 4) {
-        printf("[ERROR]: IO error.\n"); 
-        exit(1); 
-    }
-    
-    Customer customers[customers_num];
-    file_customers_init(customers, file_read, customers_num);
+    Customer customers[header.customers_num];
+    file_customers_init(customers, file_read, header.customers_num);
     fclose(file_read);
 
-    NP = 3 * customers_num;
-    int** distances = distances_matrix_init(customers, customers_num);
+    NP = 3 * header.customers_num;
+    int** distances = distances_matrix_init(customers, header.customers_num);
 
     terminal_print_parameters(de_technique, NP, seed);
 
-    differential_evolution(distances, customers, customers_num, vehicles_num, capacity_max, best_solution, de_technique); 
+    differential_evolution(distances, customers, header.customers_num, header.vehicles_num, header.capacity_max, header.best_solution_value, de_technique); 
     
-    distances = distances_matrix_free(distances, customers_num);
+    distances = distances_matrix_free(distances, header.customers_num);
 
     return 0;
 }

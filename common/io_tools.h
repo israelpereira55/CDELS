@@ -7,6 +7,8 @@
 #include "../metaheuristic/differential_evolution.h"
 
 
+void file_read_header(FILE* file, Header* header);
+
 void file_customers_init(Customer* customers, FILE* file, int customers_num);
 
 void file_update_customer_demand(Customer* customers, FILE* file, int customers_num);

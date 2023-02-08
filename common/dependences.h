@@ -23,6 +23,16 @@ struct individual {
 };
 
 
+typedef struct header Header;
+
+struct header {
+    int capacity_max,
+        vehicles_num,
+        customers_num, 
+        best_solution_value;
+};
+
+
 Customer* customer_init(int id, double x, double y);
 
 Customer* customer_free(Customer* customer);
