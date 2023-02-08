@@ -10,9 +10,9 @@
   <h3 align="center">An algorithm based on Differential Evolution with Local Search for the CVRP.</h3>
 
   <p align="center">
-    This is  an algorithm that seeks to get the optimum solutions for the CVRP. 
+    This is an algorithm that seeks to get the optimum solutions for the CVRP. 
     <br />
-    The coded heuristics are explained on the published article [1]. If you use this code, please cite us in your article or work! =)
+    The coded heuristics are explained in the published article [1]. If you use this code, please cite us in your article or work! =)
     <br />
   </p>
 </p>
@@ -50,7 +50,7 @@ This project started when I chose the Differential Evolution in a metaheuristics
 
 I love the Differential Evolution metaheuristic. So, we have proposed a combinatorial adaptation for DE for CVRP, that can also be applied to other combinatorial problems.
 
-In the literature, there are several DE adaptations for combinatorial problems. Teoh et al. [2] have done a great article using DE for CVRP, which uses an easy-to-code adaptation for DE proposed by (Mingyong,  L.  and  Erbao,  C), which ranks the real numbers and assigns integers considering the ranks of the numbers, where a lower number are assigned to lower integers. It's not only easy to code but also gives good results. We have proposed an algorithm based in DE with an adaptation for mutation and crossover DE mechanisms. This adaptation uses the position of the clients in chromosomes which presented a better result than arithmetically updating their values. The complete algorithm is explained detailed in our article [1].
+In the literature, there are several DE adaptations for combinatorial problems. Teoh et al. [2] have done a great article using DE for CVRP, which uses an easy-to-code adaptation for DE proposed by (Mingyong,  L.  and  Erbao,  C), which ranks the real numbers and assigns integers considering the ranks of the numbers, where a lower number are assigned to lower integers. It's not only easy to code but also gives good results. We have proposed an algorithm based on DE with an adaptation for mutation and crossover DE mechanisms. This adaptation uses the position of the clients in chromosomes which presented a better result than arithmetically updating their values. The complete algorithm is explained detailed in our article [1].
 
 I'm publishing the code to make it easier to reproduce. Sadly, it's not a common practice for papers in the optimization area, but we can change that! ;)
 
@@ -65,14 +65,13 @@ The CDELS stands for Combinatorial Differential Evolution with Local Search. CDE
 First, you need a CVRP problem instance, which you can get on VRP Libraries.
 We will list some libraries in which you can get them. We also have the "instances" folder with some CVRPLIB instances, mostly for backup purposes but you can use them too.
 
-You can make your own instance. It just needs to follow TSPLIB95 standards. 
+You can make your instance. It just needs to follow TSPLIB95 standards using customers with 2D dimensions. In this CDELS version, **instances using distance matrix ARE NOT SUPPORTED**.
 
 * [CVRPLIB](http://vrp.atd-lab.inf.puc-rio.br/)
 
 
-The customers should be given in 2d dimensions. In this CDELS version, instances using distance matrix are not supported.
 If you are creating your instance and don't know the optimum value just write a low value which should be
-bellow the lower bound (just write a small integer! ;) ).
+below the lower bound (just write a small integer! ;) ).
 
 **Important:** We are using the TSPLIB95 standard that rounds to the nearest integer the operation cost with floating numbers. If you don't want that, modify the distance matrix creating function.
 
