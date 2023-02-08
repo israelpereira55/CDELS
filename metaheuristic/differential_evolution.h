@@ -1,7 +1,7 @@
 #ifndef DIFFERENTIAL_EVOLUTION_H
 #define DIFFERENTIAL_EVOLUTION_H
 
-#include "../base/dependences.h"
+#include "../common/dependences.h"
 
 #define F 0.1
 #define CR 0.9

@@ -7,12 +7,12 @@ LIBS= -lm
 all: build
 
 build:
-	$(CC) -c $(CFLAGS) base/*.c metaheuristic/*.c main.c
+	$(CC) -c $(CFLAGS) common/*.c metaheuristic/*.c main.c
 	$(CC) *.o $(LIBS) -o CDELS
 	@rm *.o
 	
 debug:
-	$(CC) -c $(CFLAGSDEBUG) base/*.c metaheuristic/*.c main.c
+	$(CC) -c $(CFLAGSDEBUG) common/*.c metaheuristic/*.c main.c
 	$(CC) *.o $(LIBS) -o CDELS
 	@rm *.o
 	

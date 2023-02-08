@@ -4,9 +4,9 @@
 #include <limits.h>
 #include <time.h>
 
-#include "base/local_search.h"
-#include "base/dependences.h"
-#include "base/io_tools.h"
+#include "common/local_search.h"
+#include "common/dependences.h"
+#include "common/io_tools.h"
 #include "metaheuristic/differential_evolution.h"
 
 int NP;

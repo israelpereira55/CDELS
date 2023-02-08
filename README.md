@@ -87,12 +87,12 @@ gcc and make.
 ### Setup
 
 1. Modify the parameters
-    * [EvolucaoDiferencial.h](https://github.com/israelpereira55/CDELS/blob/main/HeadED/EvolucaoDiferencial.h)
+    * [EvolucaoDiferencial.h](https://github.com/israelpereira55/CDELS/blob/master/metaheuristic/differential_evolution.h)
 
       To choose the F, CR, Penality, and MaxGen parameters.
 
 
-    * [EvolucaoDiferencial.c](https://github.com/israelpereira55/CDELS/tree/main/Combinatoria)
+    * [EvolucaoDiferencial.c](https://github.com/israelpereira55/CDELS/blob/master/metaheuristic/differential_evolution.c)
 
 
       To choose a fixed value for the NP parameter, remove the NP definition in the main file.
