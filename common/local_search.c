@@ -8,6 +8,7 @@
 
 #include "../metaheuristic/differential_evolution.h"
 
+
 /* Determina a customer_preceding e a customer_successor da customer determinada pela component.
  *
  * Variáveis:
@@ -50,19 +51,6 @@
     }
 
 
-/* Calcula o cost do indivíduo com a troca da customer_old pela customer_new.
- *
- * Variáveis:
- *   - (int)   cost, customer_preceding, customer_successor, customer_old, customer_new.
- *   - (int**) distances.
- */
-#define calculate_swap_cost_exclusive(cost, distances, customer_preceding, customer_successor, customer_old, customer_new) \
-    cost   - distances[customer_preceding][customer_old]  \
-        - distances[customer_old][customer_successor] \
-        + distances[customer_preceding][customer_new]    \
-        + distances[customer_new][customer_successor]
-
-
 /* Calcula o cost do indivíduo com a remoção da customer.
  * Não deve ser usado caso a route esteja vazia, pois é adicionado o cost da customer anterior a customer posterior,
  * mas mesmo que neste caso o valor ainda será correto, será menos eficiente.
@@ -72,9 +60,9 @@
  *   - (int**) distances.
  */ 
 #define calculate_customer_remotion(cost, distances, customer_preceding, customer_successor, customer) \
-    cost   - distances[customer_preceding][customer] \
-        - distances[customer][customer_successor] \
-        + distances[customer_preceding][customer_successor]
+    cost - distances[customer_preceding][customer] \
+         - distances[customer][customer_successor] \
+         + distances[customer_preceding][customer_successor]
 
 
 /* Calcula o cost do indivíduo com adição da customer.
@@ -85,24 +73,36 @@
  *   - (int**) distances.
  */
 #define calculate_customer_insertion(cost, distances, customer_preceding, customer_successor, customer) \
-    cost   + distances[customer_preceding][customer] \
-        + distances[customer][customer_successor] \
-        - distances[customer_preceding][customer_successor]
+    cost + distances[customer_preceding][customer] \
+         + distances[customer][customer_successor] \
+         - distances[customer_preceding][customer_successor]
+
+
+/* Calcula o cost do indivíduo com a troca da customer_old pela customer_new.
+ *
+ * Variáveis:
+ *   - (int)   cost, customer_preceding, customer_successor, customer_old, customer_new.
+ *   - (int**) distances.
+ */
+#define calculate_swap_cost_exclusive(cost, distances, customer_preceding, customer_successor, customer_old, customer_new) \
+    cost - distances[customer_preceding][customer_old]  \
+         - distances[customer_old][customer_successor] \
+         + distances[customer_preceding][customer_new]    \
+         + distances[customer_new][customer_successor]
 
 
 /* Calcula o cost do indivíduo com a troca da customeri pela customerj.
  */
 #define calculate_swap_cost_inclusive(routes, distances, cost_new, cost, i, j, customeri, routei, icustomer_preceding, icustomer_successor, customerj, routej, jcustomer_preceding, jcustomer_successor) \
     if (i == j-1) { \
-    cost_new = cost - distances[icustomer_preceding][customeri] \
-        - distances[customerj][jcustomer_successor] \
-        + distances[customerj][icustomer_preceding] \
-        + distances[customeri][jcustomer_successor]; \
+        cost_new = cost - distances[icustomer_preceding][customeri] \
+                        - distances[customerj][jcustomer_successor] \
+                        + distances[customerj][icustomer_preceding] \
+                        + distances[customeri][jcustomer_successor]; \
     } else { \
-    cost_new = cost + calculate_swap_cost_exclusive(0, distances, icustomer_preceding, icustomer_successor, customeri, customerj) \
-        +  calculate_swap_cost_exclusive(0, distances, jcustomer_preceding, jcustomer_successor, customerj, customeri); \
+        cost_new = cost + calculate_swap_cost_exclusive(0, distances, icustomer_preceding, icustomer_successor, customeri, customerj) \
+                        + calculate_swap_cost_exclusive(0, distances, jcustomer_preceding, jcustomer_successor, customerj, customeri); \
     }
-
 
 
 void local_search(Individual* trial, int** distances, Customer* customers, int vehicles_num) {
@@ -280,7 +280,7 @@ int drop_one_point_infeasible(Individual* individual, int** distances, Customer*
         /* Selecionando uma route inválida aleatória */
         do {
             route_invalid = rand() % vehicles_num;
-        }while (individual->capacities_free[route_invalid] >= 0); //TODO: make a list of infeasible routes
+        } while (individual->capacities_free[route_invalid] >= 0); //TODO: make a list of infeasible routes
         
         route = individual->routes[route_invalid];
         route_end = individual->routes_end[route_invalid];
@@ -289,20 +289,21 @@ int drop_one_point_infeasible(Individual* individual, int** distances, Customer*
         retry_cnt = 0;
         retry_max = route_end + route_end/2;
         do {
-            if (retry_cnt == retry_max) 
+            if (retry_cnt == retry_max) {
                 return -1; /* Algoritmo chegou ao máximo de retry_cnt e não encontrou uma customer que pudesse ser realocada naquela route */
+            }
         
             customer = route[rand() % route_end];
             load = customers[customer].demand;
             
             retry_cnt++;
-        }while (highest_free_capacity < load);
+        } while (highest_free_capacity < load);
         
         
         /* Selecionando uma route aleatória para realocar a customer selecionada */
         do {
             route_chosen = rand() % vehicles_num;
-        }while (individual->capacities_free[route_chosen] < load);
+        } while (individual->capacities_free[route_chosen] < load);
 
         reinsert_customer_best_position_in_another_route(individual, distances, customer, load, route_chosen);
 
@@ -331,9 +332,10 @@ int drop_one_point_infeasible(Individual* individual, int** distances, Customer*
             if (i == vehicles_num) infeasible = 0;
         }
         
-    }while (infeasible);
+    } while (infeasible);
 
     individual->feasible = 1;
+
     return individual->cost = individual->cost - PENALTY;
 }
 
@@ -357,7 +359,7 @@ int reinsert_customer_best_position_in_another_route_if_improves(Individual* ind
     int cost_new = 0;
     if (individual->routes_end[new_route_idx] == 0) {
         cost_new = custo_base + distances[0][customer]
-                    + distances[customer][0];
+                              + distances[customer][0];
 
         if (cost_new < individual->cost) {
             individual_remove_customer(individual, customer, load);
@@ -419,7 +421,7 @@ void reinsert_customer_best_position_in_another_route(Individual* individual, in
     if (individual->routes_end[new_route_idx] == 0) {
         individual_insert_customer(individual, customer, load, 0, new_route_idx);
         individual->cost = custo_base + distances[0][customer]
-            + distances[customer][0];
+                                      + distances[customer][0];
         return;
     }
 
@@ -451,6 +453,7 @@ void reinsert_customer_best_position_in_another_route(Individual* individual, in
 
     individual_insert_customer(individual, customer, load, nova_posicao, new_route_idx);
     individual->cost = original_cost;
+
     return;
 }
 
@@ -522,5 +525,6 @@ void strong_drop_one_point(Individual* individual, int** distances, Customer* cu
             individual->feasible = 1;
         }
     }
+    
     return;
 }

@@ -11,12 +11,14 @@ Customer* customer_create(int id, double x, double y) {
     customer->x = x;
     customer->y = y;
     customer->demand = 0;
+    
     return customer;
 }
 
 
 Customer* customer_free(Customer* customer) {
     free(customer);
+
     return NULL;
 }
 
@@ -30,35 +32,38 @@ int calculate_distance(Customer* c1, Customer* c2) {
 
 
 int** distances_matrix_init(Customer* customers, int customers_num) {
-    int i, j, cost;
-        
     int** mat = (int**) malloc (customers_num * sizeof(int*));
-    for (i = 0; i < customers_num; i++)
+    for (int i = 0; i < customers_num; i++) {
         mat[i] = (int*) malloc (customers_num * sizeof(int));
+    }
     
-    Customer *c1, *c2;
-    for (i = 1; i < customers_num; i++) {
+    int cost = 0;
+    Customer *c1 = NULL,
+             *c2 = NULL;
+    for (int i = 1; i < customers_num; i++) {
         c1 = &customers[i];
-        for (j = i -1; j >= 0; j--) {
+        for (int j = i -1; j >= 0; j--) {
             c2 = &customers[j];
             cost = sqrt( pow((c1->x - c2->x), 2) + pow((c1->y - c2->y), 2) ) + 0.5;
             mat[i][j] = mat[j][i] = cost;
         }
     }
     
-    for (i = 0; i < customers_num; i++)
+    for (int i = 0; i < customers_num; i++) {
         mat[i][i] = 0;
+    }
         
     return mat;
 }
 
 
 int** distances_matrix_free(int** distances, int customers_num) {
-    int i;
-    for (i = 0; i < customers_num; i++)
+    for (int i = 0; i < customers_num; i++) {
         free(distances[i]);
+    }
     
     free(distances);
+
     return NULL;
 }
 
@@ -67,9 +72,9 @@ Individual* individual_init(int customers_num, int vehicles_num) {
     Individual* individual = (Individual*) malloc(sizeof(Individual));
     individual->routes = (int**) malloc(vehicles_num * sizeof(int*));
     
-    int i;
-    for (i = 0; i < vehicles_num; i++)
+    for (int i = 0; i < vehicles_num; i++) {
         individual->routes[i] = (int*) malloc(customers_num * sizeof(int));
+    }
 
     individual->positions =   (int**) malloc(2 * sizeof(int*));
     individual->positions[0] = (int*) malloc(customers_num * sizeof(int));
@@ -81,13 +86,15 @@ Individual* individual_init(int customers_num, int vehicles_num) {
     individual->capacities_free = (int*) malloc (vehicles_num * sizeof(int));
     
     individual->cloned = 0;
+
     return individual;
 }
 
+
 Individual* individual_free(Individual* individual, int vehicles_num) {
-    int i;
-    for (i = 0; i < vehicles_num; i++)
+    for (int i = 0; i < vehicles_num; i++) {
         free(individual->routes[i]);
+    }
         
     free(individual->routes);
     
@@ -98,13 +105,15 @@ Individual* individual_free(Individual* individual, int vehicles_num) {
     
     free(individual->routes_end);
     free(individual);
+
     return NULL;
 }
 
+
 Individual* individual_generate_top_to_down(int** distances, Customer* customers, int customers_num, int capacity_max, int vehicles_num) {
-    int load,
-        random,
-        route_load;
+    int load = 0,
+        random = 0,
+        route_load = 0;
         
     int customers_checked[customers_num],
         customers_routed[customers_num];
@@ -184,15 +193,16 @@ Individual* individual_generate_top_to_down(int** distances, Customer* customers
     
     individual->routes_end[routes_planned_cnt] = index;
     individual_reevaluate(individual, capacity_max, vehicles_num, distances, customers);
+
     return individual;
 }
 
 
 //TODO: make top to down and down to top in the same function
 Individual* individual_generate_down_to_top(int** distances, Customer* customers, int customers_num, int capacity_max, int vehicles_num) {
-    int load,
-        random,
-        route_load;
+    int load = 0,
+        random = 0,
+        route_load = 0;
         
     int customers_checked[customers_num],
         customers_routed[customers_num];
@@ -270,19 +280,19 @@ Individual* individual_generate_down_to_top(int** distances, Customer* customers
     
     individual->routes_end[routes_planned_cnt] = index; 
     individual_reevaluate(individual, capacity_max, vehicles_num, distances, customers);
+
     return individual;
 }
         
+
 void individual_reevaluate(Individual* individual, int capacity_max, int vehicles_num, int** distances, Customer* customers) {
-    int *route,
-        *routes_end = individual->routes_end,
-        *capacities_free = individual->capacities_free;
+    int *route = NULL;
          
-    int cost,
-        route_load,
-        component,
-        customer_current,
-        customer_before;
+    int cost = 0,
+        route_load = 0,
+        component = 0,
+        customer_current = 0,
+        customer_before = 0;
         
     individual->feasible = 1;
     individual->cost = 0;
@@ -291,13 +301,13 @@ void individual_reevaluate(Individual* individual, int capacity_max, int vehicle
     for (int i = 0; i < vehicles_num; i++) {
     
         route = individual->routes[i];
-        route_end = routes_end[i];
+        route_end = individual->routes_end[i];
         route_load = 0;
         for (int j = 0; j < route_end; j++) {
             component = route[j];
             route_load += customers[component].demand;
         }
-        capacities_free[i] = capacity_max - route_load;
+        individual->capacities_free[i] = capacity_max - route_load;
         
         if (route_load > capacity_max && individual->feasible) {
             individual->feasible = 0;
@@ -316,8 +326,10 @@ void individual_reevaluate(Individual* individual, int capacity_max, int vehicle
         cost += distances[customer_before][0];
         individual->cost += cost;
     }
+
     return;
 }
+
 
 /* Não são clonadas as cargas disponiveis */
 Individual* individual_make_hard_clone(Individual* individual, int customers_num, int vehicles_num) {
@@ -339,15 +351,17 @@ Individual* individual_make_hard_clone(Individual* individual, int customers_num
 
     clone->cost = individual->cost;
     clone->feasible = individual->feasible;
+
     return clone;
 }
+
 
 /* Deve ser inserido em outra route */
 void individual_insert_customer(Individual* individual, int customer, int load, int new_idx, int new_route) {
     int *route = individual->routes[new_route],
          position = individual->routes_end[new_route];
     
-    int customer_chosen;
+    int customer_chosen = -1;
     while (position > new_idx) {
         customer_chosen = route[position -1];
         route[position] = customer_chosen;
@@ -360,15 +374,17 @@ void individual_insert_customer(Individual* individual, int customer, int load, 
     individual->positions[1][customer] = position;
     individual->routes_end[new_route]++;
     
-    individual->capacities_free[new_route] -= load; 
+    individual->capacities_free[new_route] -= load;
+
     return;
 }
+
 
 void individual_reinsert_customer_in_route(Individual* individual, int customer, int new_idx) {
     int *route = individual->routes[ individual->positions[0][customer] ],
          position = individual->positions[1][customer];
 
-    int customer_chosen;
+    int customer_chosen = -1;
     if (new_idx < position) {
         while (position > new_idx) {
             customer_chosen = route[position -1];
@@ -392,8 +408,11 @@ void individual_reinsert_customer_in_route(Individual* individual, int customer,
     
     route[position] = customer;
     individual->positions[1][customer] = position;
+
     return;
 }
+
+
 /* Sem uso
 void individual_insere_cidade_fim_rota(Individual* individual, int customer, int load, int route) {
     int index = individual->routes_end[route];
@@ -405,6 +424,7 @@ void individual_insere_cidade_fim_rota(Individual* individual, int customer, int
     individual->positions[1][customer] = index;
     return;
 }*/
+
 
 /* Se as customers estiverem na mesma route, passar as cargas como 0 pois não mudarão */
 void individual_swap_customers(Individual* individual, int customer1, int load1, int customer2, int load2) {
@@ -427,6 +447,7 @@ void individual_swap_customers(Individual* individual, int customer1, int load1,
     return;
 }
 
+
 void individual_remove_customer(Individual* individual, int customer, int load) { //TODO: pass customer instead
     int  route_idx = individual->positions[0][customer],
          route_end = individual->routes_end[route_idx],
@@ -436,8 +457,9 @@ void individual_remove_customer(Individual* individual, int customer, int load) 
     individual->routes_end[route_idx]--;
     
     //Se a customer a ser removida é a última customer da route.
-    if (index +1 == route_end)
+    if (index +1 == route_end) {
         return;
+    }
     
     int *route = individual->routes[route_idx],
          customer_new = 0;
@@ -447,8 +469,6 @@ void individual_remove_customer(Individual* individual, int customer, int load) 
         individual->positions[1][customer_new] = index;
         index++;
     }
+
     return;
 }
-
-
-

@@ -74,12 +74,13 @@ Generation* initial_population(int** distances, Customer* customers, int custome
 }
 
 void generation_clear_cloned_flags(Generation* generation) {
-    int i;
-    for (i = 0; i < NP; i++) {
+    for (int i = 0; i < NP; i++) {
         if (generation->individuals[i]->cloned) {
             generation->individuals[i]->cloned = 0;
         }
     }
+
+    return;
 }
 
 Generation* new_generation(Generation* generation, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max, enum DETechnique de_technique ) {
@@ -111,17 +112,17 @@ Generation* new_generation(Generation* generation, int** distances, Customer* cu
             crossover_type = CROSSOVER_EXP;
             break;
 
-        //TODO: print error?
         default:
-            mutation_type = MUTATION_RAND;
-            crossover_type = CROSSOVER_BIN;
+            printf("[ERROR]: Bad DE technique.\n");
+            exit(1);
     }
     
     Generation* generation2 = generation_init();
     generation2->best_solution = generation->best_solution;
 
-    if (generation2->best_solution != NULL)
+    if (generation2->best_solution != NULL) {
         generation2->best_solution->cloned = 1;
+    }
 
     int generation2_has_best_solution_generation1 = 0;
 
@@ -159,7 +160,9 @@ Generation* new_generation(Generation* generation, int** distances, Customer* cu
                 generation2_has_best_solution_generation1 = 1;
                 trial = individual_free(trial, vehicles_num);
                 
-            } else generation2->individuals[target_idx] = trial;
+            } else {
+                generation2->individuals[target_idx] = trial;
+            }
 
         } else {
             generation2->individuals[target_idx] = target;
@@ -169,8 +172,9 @@ Generation* new_generation(Generation* generation, int** distances, Customer* cu
             if (target->feasible) {
                 generation2->feasible_solutions_num++;
                 
-                if (target == generation2->best_solution)
+                if (target == generation2->best_solution) {
                     generation2_has_best_solution_generation1 = 1;
+                }
             }
         }
         target_idx++; //TODO: can go to a for
@@ -184,9 +188,7 @@ Generation* new_generation(Generation* generation, int** distances, Customer* cu
 
 /* If the individual has the cloned flag enabled, means that it was passed to the new generation */
 Generation* generation_free(Generation* generation, int vehicles_num) {
-    int i;
-
-    for (i = 0; i < NP; i++) {
+    for (int i = 0; i < NP; i++) {
         if (!generation->individuals[i]->cloned) {
             generation->individuals[i] = individual_free(generation->individuals[i], vehicles_num);
         }
@@ -194,6 +196,7 @@ Generation* generation_free(Generation* generation, int vehicles_num) {
     
     free(generation->individuals);
     free(generation);
+
     return NULL;
 }
 
@@ -204,9 +207,9 @@ Individual* generate_new_mutant(Individual* x1, Individual* x2, Individual* x3, 
         mutant_route_idx = 0,
         mutant_visitation_idx = 0,
         visitation_index = 0,
-        customer_chosen = 0,
-        customers_possible[customers_num];
-        
+        customer_chosen = 0;
+
+    int customers_possible[customers_num];
     int customers_possible_num = customers_num -1, //TODO: rethink name, i believe its counting with 0 (do/while reasons)
         random_idx = 0;
         
@@ -292,8 +295,7 @@ Individual* mutation(Generation* generation, int target_idx, int customers_num, 
 Individual* crossover(Individual* x1, Individual* mutant, int customers_num, int vehicles_num, enum CrossoverType crossover_type) {
     double random = 0.;
     
-    int i = 0, j = 0,
-        index = 0,
+    int index = 0,
         trial_idx = 0,
         trial_route = 0,
         mutant_idx = 0,
@@ -357,8 +359,8 @@ Individual* crossover(Individual* x1, Individual* mutant, int customers_num, int
         }
     }
     
-    for (i = 0; i < vehicles_num; i++) {
-        for (j = 0; j < mutant->routes_end[i]; j++) {
+    for (int i = 0; i < vehicles_num; i++) {
+        for (int j = 0; j < mutant->routes_end[i]; j++) {
             random = (double) rand() / RAND_MAX;
             
             if (random <= CR) {
@@ -417,7 +419,7 @@ END_CROSSOVER:
 
 void differential_evolution(int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max, int best_solution, enum DETechnique de_technique) {
     Generation *generation = initial_population(distances, customers, customers_num, vehicles_num, capacity_max),
-            *generation2 = NULL;
+               *generation_new = NULL;
     
     FILE *file_solution = NULL,
          *file_report = NULL;
@@ -436,22 +438,22 @@ void differential_evolution(int** distances, Customer* customers, int customers_
         found_best_solution = 0,
         best_fitness = generation->best_solution->cost;
     do {
-        generation2 = new_generation(generation, distances, customers, customers_num, vehicles_num, capacity_max, de_technique);
+        generation_new = new_generation(generation, distances, customers, customers_num, vehicles_num, capacity_max, de_technique);
         
-        if (best_fitness != generation2->best_solution->cost) {
+        if (best_fitness != generation_new->best_solution->cost) {
             if (PRINT_IN_FILE) {
-                generation_print_report_in_file(file_report, generation2);
+                generation_print_report_in_file(file_report, generation_new);
                 fprintf(file_report, "\n");
             } else {
-                generation_print_report(generation2);
+                generation_print_report(generation_new);
                 printf("\n");
             }
             
-            best_fitness = generation2->best_solution->cost;
+            best_fitness = generation_new->best_solution->cost;
         }
         
         generation = generation_free(generation, vehicles_num);
-        generation = generation2;
+        generation = generation_new;
         generations_cnt++;
         
         generation_clear_cloned_flags(generation);
@@ -465,7 +467,7 @@ void differential_evolution(int** distances, Customer* customers, int customers_
 
     if (PRINT_IN_FILE) {
         if (generations_cnt == MAX_GEN) {
-            generation_print_report_in_file(file_report, generation2);
+            generation_print_report_in_file(file_report, generation);
             fprintf(file_report, "\n");
         }
     
@@ -481,7 +483,7 @@ void differential_evolution(int** distances, Customer* customers, int customers_
         
     } else {
         if (generations_cnt == MAX_GEN) {
-            generation_print_report(generation2);
+            generation_print_report(generation);
             printf("\n");
         }
     
@@ -493,9 +495,10 @@ void differential_evolution(int** distances, Customer* customers, int customers_
     }
 
     generation_clear_cloned_flags(generation);
-    if (generation2->best_solution->cloned) {
-        individual_free(generation2->best_solution, vehicles_num);
+    if (generation->best_solution->cloned) {
+        individual_free(generation->best_solution, vehicles_num);
     }
     generation = generation_free(generation, vehicles_num);
+
     return;
 }

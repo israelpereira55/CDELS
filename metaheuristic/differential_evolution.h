@@ -7,7 +7,7 @@
 #define CR 0.9
 //#define NP 250
 #define MAX_GEN 200000
-#define PENALTY 100
+#define PENALTY 100.0
 
 #define PRINT_IN_FILE 0
 

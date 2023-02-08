@@ -12,9 +12,8 @@
 int NP;
 
 int main() {
-    //F = 0.1;
-    //CR = 0.9;
     int seed = time(NULL);
+    srand(seed);
     
     int customers_num = 0,
         vehicles_num = 0,
@@ -23,60 +22,37 @@ int main() {
 
     enum DETechnique de_technique = terminal_choose_de_technique();
         
-    switch (de_technique) {
-        case RAND_1_BIN:
-            printf("DE/rand/1/bin\n");
-            break;
-
-        case RAND_1_EXP:
-            printf("DE/rand/1/exp\n");
-            break;
-
-        case BEST_1_BIN:
-            printf("DE/best/1/bin\n");
-            break;
-        
-        case BEST_1_EXP:
-            printf("DE/best/1/exp\n");
-            break;
-
-
-        default:
-            printf("ERROR?\n");
-            exit(1);
-    }
-
     char filename[81];
 
-    printf("    Name of the instance file: ");
-    scanf("%s", filename);
+    printf("Instance file: ");
+    if (scanf("%s", filename) != 1) { 
+        printf("[ERROR]: IO error.\n"); 
+        exit(1); 
+    }
 
     FILE* file_read = fopen(filename, "r");
     if (file_read == NULL) {
-        printf("    File %s was not found.\n    Aborting...\n\n", filename);
-        return 0;
+        printf("File %s was not found.\nAborting...\n", filename);
+        exit(1);
     }
     
-    fscanf(file_read, "%d %d %d %d", &vehicles_num, &best_solution, &customers_num, &capacity_max);
+    if (fscanf(file_read, "%d %d %d %d", &vehicles_num, &best_solution, &customers_num, &capacity_max) != 4) {
+        printf("[ERROR]: IO error.\n"); 
+        exit(1); 
+    }
     
     Customer customers[customers_num];
     file_customers_init(customers, file_read, customers_num);
-
     fclose(file_read);
 
+    NP = 3 * customers_num;
     int** distances = distances_matrix_init(customers, customers_num);
 
-    
-    printf("F=%.2lf, CR=%.2lf, Penalty=%d\n", F, CR, PENALTY);
+    terminal_print_parameters(de_technique, NP, seed);
 
-    NP = 3 * customers_num;
-    printf("NP=%d\n", NP);
-    
-    printf("Seed: %d\n\n", seed); 
-    srand( seed );
-    
     differential_evolution(distances, customers, customers_num, vehicles_num, capacity_max, best_solution, de_technique); 
     
     distances = distances_matrix_free(distances, customers_num);
+
     return 0;
 }
