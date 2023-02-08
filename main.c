@@ -15,11 +15,6 @@ int main() {
     int seed = time(NULL);
     srand(seed);
     
-    int customers_num = 0,
-        vehicles_num = 0,
-        best_solution = 0,
-        capacity_max = 0;
-
     enum DETechnique de_technique = terminal_choose_de_technique();
         
     char filename[81];
