@@ -33,7 +33,7 @@ enum DETechnique terminal_choose_de_technique() {
     } while (chosen_id == -1);
     
     enum DETechnique de_technique = 0;
-    switch (chosen_id){
+    switch (chosen_id) {
         case 1:
             de_technique = RAND_1_BIN;
             break;
@@ -59,7 +59,7 @@ enum DETechnique terminal_choose_de_technique() {
 }
 
 
-void file_read_header(FILE* file, Header* header){
+void file_read_header(FILE* file, Header* header) {
     char line[100];
 
     /* Using instance A-n32-k5 as example in comments */
@@ -95,11 +95,13 @@ void file_read_header(FILE* file, Header* header){
         exit(1); 
     } 
 
+
     if (fgets(line, 100, file) == NULL) {  /* CAPACITY : 100 */
         printf("[ERROR]: Bad instance.\n"); 
         exit(1); 
     }
     sscanf(line, "%*[^:]: %d", &(header->capacity_max));
+
 
     if (fgets(line, 100, file) == NULL) { /* NODE_COORD_SECTION  */
         printf("[ERROR]: Bad instance.\n"); 
@@ -116,7 +118,7 @@ void file_update_customer_demand(Customer* customers, FILE* file, int customers_
 
     for (int i = 0; i < customers_num; i++) {
 
-        if (fscanf (file, "%d %d", &id, &demand) != 2) {
+        if (fscanf(file, "%d %d", &id, &demand) != 2) {
             printf("[ERROR]: IO error.\n"); 
             exit(1); 
         }
@@ -137,7 +139,7 @@ void file_customers_init(Customer* customers, FILE* file, int customers_num) {
 
     for (int i = 0; i < customers_num; i++) {
 
-        if(3 != fscanf (file, "%d %lf %lf", &id, &x, &y)){
+        if(3 != fscanf(file, "%d %lf %lf", &id, &x, &y)) {
             printf("[ERROR]: IO error.\n"); 
             exit(1); 
         } 
