@@ -65,15 +65,15 @@ The CDELS stands for Combinatorial Differential Evolution with Local Search. CDE
 First, you need a CVRP problem instance, which you can get on VRP Libraries.
 We will list some libraries in which you can get them. We also have the "instances" folder with some CVRPLIB instances, mostly for backup purposes but you can use them too.
 
-You can make your instance. It just needs to follow TSPLIB95 standards using customers with 2D dimensions. In this CDELS version, **instances using distance matrix ARE NOT SUPPORTED**.
+You can make your instance. It just needs to follow [TSPLIB95](http://www.or.uni-bonn.de/lectures/ws17/co_exercises/programming/tsp/tsp95.pdf) standards using customers with 2D dimensions. In this CDELS version, **instances using distance matrix ARE NOT SUPPORTED**.
 
 * [CVRPLIB](http://vrp.atd-lab.inf.puc-rio.br/)
 
 
 If you are creating your instance and don't know the optimum value just write a low value which should be
-below the lower bound (just write a small integer! ;) ).
+below than it's lower bound (just write a small integer! ;) ).
 
-**Important:** We are using the TSPLIB95 standard that rounds to the nearest integer the operation cost with floating numbers. If you don't want that, modify the distance matrix creating function.
+**Important:** We are using the [TSPLIB95](http://www.or.uni-bonn.de/lectures/ws17/co_exercises/programming/tsp/tsp95.pdf) standard that rounds to the nearest integer the operation cost with floating numbers. If you don't want that, modify the distance matrix creating function.
 
 
 ### Prerequisites
@@ -86,7 +86,7 @@ gcc and make.
 1. Modify the parameters
     * [differential_evolution.h](https://github.com/israelpereira55/CDELS/blob/master/metaheuristic/differential_evolution.h)
 
-      To choose the F, CR, Penality, and MaxGen parameters.
+      To choose the F, CR, Penalty, and MaxGen parameters.
 
 
     * [differential_evolution.c](https://github.com/israelpereira55/CDELS/blob/master/metaheuristic/differential_evolution.c)
@@ -99,6 +99,8 @@ gcc and make.
    make
    make run
    ```
+   
+To plot the solution you can use [CVRPPLOT](https://github.com/israelpereira55/CVRPPLOT).
 
 
 
@@ -109,9 +111,15 @@ WIP!
 -->
 
 <!-- ACKNOWLEDGEMENTS  -->
+## Limitations
+
+In this implementation, only instances using _EDGE_WEIGHT_TYPE : EUC_2D_ are supported.
+I plan to implement the EXPLICIT version.
+
+
 ## Known bugs
 
-Using very large instances (250+ customers) we noticed in rare cases that the final solution cost using the distance matrix was presenting a slightly different value (1-2 units of difference) than calculating the cost directly, probably due to the use of TSPLIB95 rounding standards and distance matrix. Until we find a way to deal with this scenario, we suggest disabling the distance matrix and always verifying the final solution cost or disabling TSPLIB95 rounding standards if possible. To verify the solution you can use [CVRPPLOT](https://github.com/israelpereira55/CVRPPLOT).
+TBD.
 
 All solutions presented in the article were validated to ensure that they were feasible and had the exact solution cost as reported.
 
@@ -142,6 +150,8 @@ Project Link: [https://github.com/israelpereira55/CDELS](https://github.com/isra
 [2] Teoh, Boon Ean, Sivalinga Govinda Ponnambalam, and Ganesan Kanagaraj. "Differential evolution algorithm with local search for capacitated vehicle routing problem." International Journal of Bio-Inspired Computation 7.5 (2015): 321-342.
 
 [3] Storn, Rainer, and Kenneth Price. "Differential evolution–a simple and efficient heuristic for global optimization over continuous spaces." Journal of global optimization 11.4 (1997): 341-359.
+
+[4] Reinelt, Gerhard. "Tsplib95." Interdisziplinäres Zentrum für Wissenschaftliches Rechnen (IWR), Heidelberg 338 (1995): 1-16.
 
 
 
