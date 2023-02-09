@@ -114,7 +114,7 @@ WIP!
 ## Limitations
 
 In this implementation, only instances using _EDGE_WEIGHT_TYPE : EUC_2D_ are supported.
-I plan to implement the EXPLICIT version.
+
 
 
 ## Known bugs
