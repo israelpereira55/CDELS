@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "dependences.h"
 #include "../metaheuristic/differential_evolution.h"
@@ -81,6 +82,12 @@ void file_read_header(FILE* file, Header* header) {
         printf("[ERROR]: Bad instance.\n"); 
         exit(1); 
     } 
+    char problem_type[81];
+    sscanf(line, "%*[^:]: %s", problem_type);
+    if (strcmp(problem_type, "CVRP") != 0) {
+        printf("[ERROR]: The instance is not for the CVRP problem.\n"); 
+        exit(1); 
+    }
 
 
     if (fgets(line, 100, file) == NULL) { /* DIMENSION : 32 */
@@ -94,6 +101,12 @@ void file_read_header(FILE* file, Header* header) {
         printf("[ERROR]: Bad instance.\n"); 
         exit(1); 
     } 
+    char edge_type[81];
+    sscanf(line, "%*[^:]: %s", edge_type);
+    if (strcmp(edge_type, "EUC_2D") != 0) {
+        printf("[ERROR]: Only instances using EUC_2D are supported.\n"); 
+        exit(1); 
+    }
 
 
     if (fgets(line, 100, file) == NULL) {  /* CAPACITY : 100 */
