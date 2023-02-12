@@ -239,7 +239,9 @@ Individual* individual_generate_down_to_top(int** distances, Customer* customers
                 customers_routed_cnt++;
                 index++;
 
-            } else route_load = route_load - load;
+            } else {
+                route_load = route_load - load;
+            }
         
             customers_checked[random] = 1;
             customers_checked_cnt++;
@@ -251,7 +253,9 @@ Individual* individual_generate_down_to_top(int** distances, Customer* customers
                 customers_checked[i] = 1;
                 customers_checked_cnt++;
                 
-            } else  customers_checked[i] = 0;
+            } else {
+                customers_checked[i] = 0;
+            }
         }
 
         individual->routes_end[routes_planned_cnt] = index;
