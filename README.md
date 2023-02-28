@@ -89,7 +89,7 @@ gcc and make.
       To choose the F, CR, Penalty, and MaxGen parameters.
 
 
-    * [differential_evolution.c](https://github.com/israelpereira55/CDELS/blob/master/metaheuristic/differential_evolution.c)
+    * [main.c](https://github.com/israelpereira55/CDELS/blob/master/main.c)
 
 
       To choose the NP parameter.
