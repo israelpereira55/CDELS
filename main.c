@@ -20,7 +20,7 @@ int main() {
     char filename[81];
 
     printf("Instance file: ");
-    if (scanf("%s", filename) != 1) { 
+    if (scanf("%80s", filename) != 1) { 
         printf("[ERROR]: IO error.\n"); 
         exit(1); 
     }
