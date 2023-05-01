@@ -110,7 +110,7 @@ Individual* individual_free(Individual* individual, int vehicles_num) {
 }
 
 
-Individual* individual_generate_top_to_down(int** distances, Customer* customers, int customers_num, int capacity_max, int vehicles_num) {
+Individual* individual_generate_random(int** distances, Customer* customers, int customers_num, int capacity_max, int vehicles_num, enum IndividualType individual_type) {
     int load = 0,
         random = 0,
         route_load = 0;
@@ -129,21 +129,27 @@ Individual* individual_generate_top_to_down(int** distances, Customer* customers
         customers_checked_cnt = 1,
         customers_routed_cnt = 1;
     
-    int routes_planned_cnt;
-    for (routes_planned_cnt = 0; routes_planned_cnt < vehicles_num; routes_planned_cnt++) {
+    int route_index;
+    if (individual_type == TOP_TO_DOWN) {
+        route_index = 0;
+    } else {
+        route_index = vehicles_num -1;
+    }
+
+    for (int routes_planned_cnt = 0; routes_planned_cnt < vehicles_num; routes_planned_cnt++) {
 
         route_load = 0;
         do {
             do {
-                random = (rand() % (customers_num-1)) +1; //+1 pois 0 é o posto; raio 1-31.
+                random = (rand() % (customers_num-1)) +1; // Range [1,31] for 32 clients. Depot is 0.
             } while (customers_checked[random]);
 
             load = customers[random].demand;
             route_load += load;
 
             if (route_load < capacity_max) {
-                individual->routes[routes_planned_cnt][index] = random;
-                individual->positions[0][random] = routes_planned_cnt;
+                individual->routes[route_index][index] = random;
+                individual->positions[0][random] = route_index;
                 individual->positions[1][random] = index;
 
                 customers_routed[random] = 1;
@@ -164,11 +170,20 @@ Individual* individual_generate_top_to_down(int** distances, Customer* customers
             if (customers_routed[i]) {
                 customers_checked[i] = 1;
                 customers_checked_cnt++;
-            } else customers_checked[i] = 0;
+            } else {
+                customers_checked[i] = 0;
+            }
         }
 
-        individual->routes_end[routes_planned_cnt] = index;
+
+        individual->routes_end[route_index] = index;
         index = 0;
+
+        if (individual_type == TOP_TO_DOWN) {
+            route_index++;
+        } else {
+            route_index--;
+        }
     }
     
     //Verificando viabilidade do individual.
@@ -178,116 +193,30 @@ Individual* individual_generate_top_to_down(int** distances, Customer* customers
     }
     
     /* Caso ainda existam customers que não foram alocadas em alguma route, elas serão inseridas na ultima route */
-    routes_planned_cnt--;
-    index = individual->routes_end[routes_planned_cnt];
+    if (individual_type == TOP_TO_DOWN) {
+        route_index = vehicles_num - 1;
+    } else {
+        route_index = 0;
+    }
+
+    index = individual->routes_end[route_index];
     
     for (int i = 1; i < customers_num; i++) {
         if(!customers_routed[i]) {
-            individual->routes[routes_planned_cnt][index] = i;
-            individual->positions[0][i] = routes_planned_cnt;
+            individual->routes[route_index][index] = i;
+            individual->positions[0][i] = route_index;
             individual->positions[1][i] = index;
             
             index++;
         }
     }
     
-    individual->routes_end[routes_planned_cnt] = index;
+    individual->routes_end[route_index] = index;
     individual_reevaluate(individual, capacity_max, vehicles_num, distances, customers);
 
     return individual;
 }
 
-
-//TODO: make top to down and down to top in the same function
-Individual* individual_generate_down_to_top(int** distances, Customer* customers, int customers_num, int capacity_max, int vehicles_num) {
-    int load = 0,
-        random = 0,
-        route_load = 0;
-        
-    int customers_checked[customers_num],
-        customers_routed[customers_num];
-        
-    memset(customers_checked, 0, customers_num*sizeof(int));
-    memset(customers_routed, 0,  customers_num*sizeof(int));
-    customers_checked[0] = 1;
-    customers_routed[0] = 1;
-    
-    Individual* individual = individual_init(customers_num, vehicles_num);
-    
-    int index = 0,
-        customers_checked_cnt = 1,
-        customers_routed_cnt = 1;
-    
-    int routes_planned_cnt;
-    for (routes_planned_cnt = vehicles_num -1; routes_planned_cnt >= 0; routes_planned_cnt--) {
-    
-        route_load = 0;
-        do {
-            do {
-                random = (rand() % (customers_num-1)) +1; //+1 pois 0 é o posto; raio 1-31.
-            } while (customers_checked[random]);
-
-            load = customers[random].demand;
-            route_load = route_load + load;
-
-            if (route_load < capacity_max) {
-                individual->routes[routes_planned_cnt][index] = random;
-                individual->positions[0][random] = routes_planned_cnt;
-                individual->positions[1][random] = index;
-
-                customers_routed[random] = 1;
-                customers_routed_cnt++;
-                index++;
-
-            } else {
-                route_load = route_load - load;
-            }
-        
-            customers_checked[random] = 1;
-            customers_checked_cnt++;
-        } while (customers_checked_cnt < customers_num);
-        
-        customers_checked_cnt = 1;
-        for (int i = 1; i < customers_num; i++) {
-            if (customers_routed[i]) {
-                customers_checked[i] = 1;
-                customers_checked_cnt++;
-                
-            } else {
-                customers_checked[i] = 0;
-            }
-        }
-
-        individual->routes_end[routes_planned_cnt] = index;
-        index = 0;
-    }
-    
-    //Verificando viabilidade do individual.
-    if (customers_routed_cnt == customers_num) {
-        individual_reevaluate(individual, capacity_max, vehicles_num, distances, customers);
-        return individual;
-    }
-    
-    /* Caso ainda existam customers que não foram alocadas em alguma route, elas serão inseridas na primeira route */
-    routes_planned_cnt++;
-    index = individual->routes_end[routes_planned_cnt];
-    
-    for (int i = 1; i < customers_num; i++) {
-        if(!customers_routed[i]) {
-            individual->routes[routes_planned_cnt][index] = i;
-            individual->positions[0][i] = routes_planned_cnt;
-            individual->positions[1][i] = index;
-            
-            index++;
-        }
-    }
-    
-    individual->routes_end[routes_planned_cnt] = index; 
-    individual_reevaluate(individual, capacity_max, vehicles_num, distances, customers);
-
-    return individual;
-}
-        
 
 void individual_reevaluate(Individual* individual, int capacity_max, int vehicles_num, int** distances, Customer* customers) {
     int *route = NULL;

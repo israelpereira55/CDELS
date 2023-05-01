@@ -3,6 +3,7 @@
 #include <string.h>
 #include <limits.h>
 #include <time.h>
+#include <stdbool.h>
 
 #include "../common/local_search.h"
 #include "../common/dependences.h"
@@ -12,6 +13,7 @@
 
 //double F, CR;
 extern int NP;
+
 
 Generation* generation_init() {
     static int id = 1;
@@ -33,45 +35,40 @@ Generation* generation_init() {
     return generation;
 }
 
+
 Generation* initial_population(int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max) {   
     Generation *generation = generation_init();
     Individual *individual;
     
-    //TODO: remove and include in loop
-    int select = rand() % 2;
-    if (select == 1) {
-        individual = individual_generate_top_to_down(distances, customers, customers_num, capacity_max, vehicles_num);
-    } else {
-        individual = individual_generate_down_to_top(distances, customers, customers_num, capacity_max, vehicles_num);
-    }
-
-    generation->individuals[0] = individual;
-    generation->best_solution = individual;
+    bool gen_has_feasible = false;
+    enum IndividualType individual_type;
     
-    if (individual->feasible)
-        generation->feasible_solutions_num++;
-    
-    int i = 1;
-    while (i < NP) {
+    int select;
+    for (int i = 0; i < NP; i++) {
         select = rand() % 2;
         if (select == 1) {
-            individual = individual_generate_top_to_down(distances, customers, customers_num, capacity_max, vehicles_num);
+            individual_type = TOP_TO_DOWN;
         } else {
-            individual = individual_generate_down_to_top(distances, customers, customers_num, capacity_max, vehicles_num);
+            individual_type = DOWN_TO_TOP;
         }
+        
+        individual = individual_generate_random(distances, customers, customers_num, capacity_max, vehicles_num, individual_type);
 
         generation->individuals[i] = individual;
 
         if (individual->feasible) {
             generation->feasible_solutions_num++;
-            if (individual->cost < generation->best_solution->cost)
+
+            if (!gen_has_feasible || individual->cost < generation->best_solution->cost) {
                 generation->best_solution = individual;
+                gen_has_feasible = true;
+            }
         }
-        i++;
     }
     
     return generation;
 }
+
 
 void generation_clear_cloned_flags(Generation* generation) {
     for (int i = 0; i < NP; i++) {
@@ -82,6 +79,7 @@ void generation_clear_cloned_flags(Generation* generation) {
 
     return;
 }
+
 
 Generation* new_generation(Generation* generation, int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max, enum DETechnique de_technique ) {
     Individual  *mutant = NULL,
@@ -126,8 +124,7 @@ Generation* new_generation(Generation* generation, int** distances, Customer* cu
 
     int generation2_has_best_solution_generation1 = 0;
 
-    int target_idx = 0;
-    while (target_idx < NP) {
+    for (int target_idx = 0; target_idx < NP; target_idx++) {
         mutant = mutation(generation, target_idx, customers_num, vehicles_num, mutation_type);
         target = generation->individuals[target_idx];
         trial = crossover(target, mutant, customers_num, vehicles_num, crossover_type);
@@ -139,23 +136,21 @@ Generation* new_generation(Generation* generation, int** distances, Customer* cu
         
         if (trial->cost < target->cost) {
             if (trial->feasible) {
-                generation2->feasible_solutions_num++;
-                if (generation2->best_solution != NULL) {
-                    if (trial->cost < generation2->best_solution->cost) {   
-                
-                        if (generation2->best_solution->cloned) {
-                            generation2->best_solution->cloned = 0;
-                        }
-                        generation2->best_solution = trial;
-                    }
-                }
-                
                 generation2->individuals[target_idx] = trial;
-                
-            /* Se o trial for inviável mas tiver cost melhor que o melhor individual, ele nao substituirá o target_idx (best). */   
-            } else if (target == generation2->best_solution) {
+                generation2->feasible_solutions_num++;
+
+                if (generation2->best_solution != NULL && trial->cost < generation2->best_solution->cost) {   
+                    if (generation2->best_solution->cloned) {
+                        generation2->best_solution->cloned = 0;
+                    }
+
+                    generation2->best_solution = trial;
+                }
+                /* If the trial is infeasible and has a better cost over the last generation best feasible solution, it will NOT substitute the target. */
+            } else if (target == generation2->best_solution && target->feasible) {
                 generation2->individuals[target_idx] = target;
                 target->cloned = 1;
+
                 generation2->feasible_solutions_num++;
                 generation2_has_best_solution_generation1 = 1;
                 trial = individual_free(trial, vehicles_num);
@@ -177,7 +172,6 @@ Generation* new_generation(Generation* generation, int** distances, Customer* cu
                 }
             }
         }
-        target_idx++; //TODO: can go to a for
     }
 
     if (generation2_has_best_solution_generation1)
@@ -185,6 +179,7 @@ Generation* new_generation(Generation* generation, int** distances, Customer* cu
     
     return generation2;
 }
+
 
 /* If the individual has the cloned flag enabled, means that it was passed to the new generation */
 Generation* generation_free(Generation* generation, int vehicles_num) {
@@ -199,6 +194,7 @@ Generation* generation_free(Generation* generation, int vehicles_num) {
 
     return NULL;
 }
+
 
 Individual* generate_new_mutant(Individual* x1, Individual* x2, Individual* x3, int vehicles_num, int customers_num) {
     int route_target = 0,
@@ -268,9 +264,10 @@ Individual* generate_new_mutant(Individual* x1, Individual* x2, Individual* x3, 
     return mutant;
 }
 
-// TODO: use enum
-/* mutation_type = 0 o individual target_idx é a melhor solution da populacao.
- * mutation_type = 1 o individual target_idx é aleatório.
+
+/* @param mutation_type
+ *   - 0 (MUTATION_RAND): the individual target_idx is the best of the generation
+ *   - 1 (MUTATION_BEST): the individual target_idx is random
  */
 Individual* mutation(Generation* generation, int target_idx, int customers_num, int vehicles_num, enum MutationType mutation_type) {
     int r1 = rand() % NP;
@@ -290,6 +287,7 @@ Individual* mutation(Generation* generation, int target_idx, int customers_num, 
 
     return generate_new_mutant(generation->individuals[r1], generation->individuals[r2], generation->individuals[r3], vehicles_num, customers_num);
 }
+
 
 /* A cidade perturbada é a cidade da posicao antiga do individual, que será substituida pela cidade mutant. */
 Individual* crossover(Individual* x1, Individual* mutant, int customers_num, int vehicles_num, enum CrossoverType crossover_type) {
@@ -416,6 +414,7 @@ Individual* crossover(Individual* x1, Individual* mutant, int customers_num, int
 END_CROSSOVER:
     return trial;
 }
+
 
 void differential_evolution(int** distances, Customer* customers, int customers_num, int vehicles_num, int capacity_max, int best_solution, enum DETechnique de_technique) {
     Generation *generation = initial_population(distances, customers, customers_num, vehicles_num, capacity_max),

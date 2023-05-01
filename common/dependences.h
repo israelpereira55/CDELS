@@ -10,6 +10,8 @@ struct customer {
 };
 
 
+enum IndividualType { TOP_TO_DOWN, DOWN_TO_TOP };
+
 typedef struct individual Individual;
 
 struct individual {
@@ -48,9 +50,7 @@ Individual* individual_init(int customers_num, int vehicles_num);
 
 Individual* individual_free(Individual* individuo, int vehicles_num);
 
-Individual* individual_generate_top_to_down(int** distances, Customer* customers, int customers_num, int capacity_max, int vehicles_num);
-
-Individual* individual_generate_down_to_top(int** distances, Customer* customers, int customers_num, int capacity_max, int vehicles_num);
+Individual* individual_generate_random(int** distances, Customer* customers, int customers_num, int capacity_max, int vehicles_num, enum IndividualType individual_type);
 
 void individual_swap_customers(Individual* individual, int customer1, int load1, int customer2, int load2);
 
